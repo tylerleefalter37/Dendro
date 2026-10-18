@@ -1,0 +1,3457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Dendro-Tycoon: Bio-Toxic Vivarium & Colosseum</title>
+
+  <!-- iOS Safari & Mobile PWA Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DendroTycoon">
+  <meta name="theme-color" content="#070b09">
+  <meta name="format-detection" content="telephone=no">
+
+  <style>
+    /* -------------------------------------------------------------
+       ROOT TOKENS & RESET
+       ------------------------------------------------------------- */
+    :root {
+      --bg-dark: #070b09;
+      --bg-surface: #0e1612;
+      --bg-card: #13201a;
+      --bg-card-hover: #192a22;
+      --border-subtle: #1e3328;
+      --border-accent: #2d4f3e;
+
+      --cyan-bright: #00f2a6;
+      --cyan-electric: #00d4ff;
+      --gold-tox: #facc15;
+      --carmine-bio: #ff3366;
+      --purple-mystic: #b359ff;
+      --text-main: #e8f5ee;
+      --text-muted: #8ba596;
+      --text-dim: #556e60;
+
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --font-mono: "SF Mono", "JetBrains Mono", Consolas, "Fira Code", monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.4;
+      overflow-x: hidden;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* Input & Select zoom prevention on Mobile Safari */
+    input, select, textarea {
+      font-size: 16px !important;
+      font-family: var(--font-mono);
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-accent);
+      border-radius: 3px;
+    }
+
+    /* -------------------------------------------------------------
+       LAYOUT CONTAINERS
+       ------------------------------------------------------------- */
+    #app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding-top: var(--safe-top);
+      padding-bottom: calc(var(--safe-bottom) + 16px);
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    /* Top Dev Monospace Drawer */
+    #dev-drawer {
+      background: #050806;
+      border-bottom: 2px dashed #00f2a644;
+      padding: 12px 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      transition: all 0.25s ease;
+    }
+    #dev-drawer.open {
+      display: flex;
+    }
+    .dev-btn {
+      background: #112219;
+      color: var(--cyan-bright);
+      border: 1px solid #1f4331;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      transition: background 0.15s;
+    }
+    .dev-btn:hover {
+      background: #193828;
+      border-color: var(--cyan-bright);
+    }
+    .dev-btn.warn {
+      color: var(--gold-tox);
+      border-color: #5c4d0e;
+    }
+    .dev-btn.danger {
+      color: var(--carmine-bio);
+      border-color: #5c1424;
+    }
+
+    /* Header & Ledger Bar */
+    header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      gap: 12px;
+      border-bottom: 1px solid #14231b;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+    .brand-icon {
+      width: 24px;
+      height: 24px;
+      fill: var(--cyan-bright);
+      filter: drop-shadow(0 0 6px rgba(0, 242, 166, 0.6));
+    }
+    .brand span {
+      background: linear-gradient(90deg, var(--cyan-bright), var(--cyan-electric));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .icon-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 15px;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover, .icon-btn.active {
+      color: var(--cyan-bright);
+      border-color: var(--cyan-bright);
+      background: var(--bg-card-hover);
+    }
+
+    /* Live Resource Ticker */
+    .ledger-strip {
+      display: flex;
+      overflow-x: auto;
+      white-space: nowrap;
+      padding: 8px 16px;
+      gap: 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: #09100c;
+    }
+    .ledger-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ledger-val {
+      font-weight: 700;
+      color: #fff;
+    }
+    .val-credits { color: var(--gold-tox); text-shadow: 0 0 8px rgba(250, 204, 21, 0.25); }
+    .val-rations { color: var(--cyan-bright); }
+    .val-poultice { color: #38bdf8; }
+    .val-glaze { color: #e879f9; }
+    .val-day { color: #a78bfa; }
+
+    /* Nav Tabs */
+    nav.tab-bar {
+      display: flex;
+      overflow-x: auto;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 4px 8px;
+      gap: 4px;
+    }
+    .nav-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .nav-tab:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .nav-tab.active {
+      color: #070b09;
+      background: var(--cyan-bright);
+      box-shadow: 0 0 12px rgba(0, 242, 166, 0.4);
+    }
+    .badge {
+      background: rgba(0, 0, 0, 0.25);
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+    }
+    .nav-tab.active .badge {
+      background: #070b09;
+      color: var(--cyan-bright);
+    }
+
+    /* Main Tab Content View */
+    main {
+      flex: 1;
+      padding: 16px;
+    }
+    .tab-pane {
+      display: none;
+      animation: fadeIn 0.2s ease forwards;
+    }
+    .tab-pane.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Common Card Styles */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Standard Interactive Button */
+    .btn {
+      background: #162b20;
+      color: var(--cyan-bright);
+      border: 1px solid var(--border-accent);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn:hover:not(:disabled) {
+      background: #203f2f;
+      border-color: var(--cyan-bright);
+      box-shadow: 0 0 10px rgba(0, 242, 166, 0.2);
+    }
+    .btn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #00d4ff, #00f2a6);
+      color: #070b09;
+      font-weight: 700;
+      border: none;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #2ae0ff, #33ffbe);
+      box-shadow: 0 0 15px rgba(0, 242, 166, 0.4);
+    }
+    .btn-gold {
+      background: linear-gradient(135deg, #d97706, #facc15);
+      color: #070b09;
+      font-weight: 700;
+      border: none;
+    }
+    .btn-gold:hover:not(:disabled) {
+      box-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
+    }
+    .btn-danger {
+      background: rgba(255, 51, 102, 0.15);
+      color: var(--carmine-bio);
+      border: 1px solid rgba(255, 51, 102, 0.4);
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(255, 51, 102, 0.3);
+    }
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 1: ROSTER VAULT & MONOSPACE DOSSIERS
+       ------------------------------------------------------------- */
+    .vault-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+      background: var(--bg-surface);
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+    }
+    .vault-select, .vault-input {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-accent);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 8px;
+      outline: none;
+      flex: 1 1 140px;
+    }
+    .vault-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .frog-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .frog-card:hover {
+      border-color: var(--cyan-bright);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+    }
+    .frog-card.grail {
+      border-color: var(--gold-tox);
+      box-shadow: 0 0 14px rgba(250, 204, 21, 0.2);
+    }
+    .card-top-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .frog-thumb {
+      width: 72px;
+      height: 72px;
+      background: #08100c;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+    .frog-meta {
+      flex: 1;
+      min-width: 0;
+    }
+    .frog-name {
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .frog-tier {
+      font-size: 11px;
+      color: var(--cyan-bright);
+      font-family: var(--font-mono);
+    }
+    .frog-sex {
+      display: inline-block;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+    .sex-male { color: #38bdf8; }
+    .sex-female { color: #f472b6; }
+
+    .tag-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+    .tag-visual { background: rgba(0, 242, 166, 0.15); color: var(--cyan-bright); border: 1px solid rgba(0, 242, 166, 0.3); }
+    .tag-het { background: rgba(148, 163, 184, 0.12); color: #cbd5e1; border: 1px solid #334155; }
+    .tag-codom { background: rgba(232, 121, 249, 0.15); color: #f0abfc; border: 1px solid rgba(232, 121, 249, 0.3); }
+    .tag-grail { background: rgba(250, 204, 21, 0.2); color: var(--gold-tox); border: 1px solid var(--gold-tox); font-weight: 700; }
+
+    .card-stat-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: #08100c;
+      padding: 6px 8px;
+      border-radius: 6px;
+      margin-top: auto;
+    }
+
+    /* -------------------------------------------------------------
+       DOSSIER MODAL / DRAWER
+       ------------------------------------------------------------- */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-accent);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 650px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .modal-close:hover {
+      color: #fff;
+      border-color: var(--cyan-bright);
+    }
+    .dossier-grid {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 16px;
+      margin-top: 12px;
+    }
+    @media (max-width: 600px) {
+      .dossier-grid { grid-template-columns: 1fr; }
+    }
+    .dossier-canvas-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .dossier-canvas {
+      width: 180px;
+      height: 180px;
+      background: #08100c;
+      border-radius: 12px;
+      border: 1px solid var(--border-accent);
+    }
+    .iv-table {
+      width: 100%;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    .iv-table td {
+      padding: 4px 6px;
+    }
+    .iv-bar-bg {
+      background: #112219;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      width: 100%;
+    }
+    .iv-bar-fill {
+      height: 100%;
+      background: var(--cyan-bright);
+      border-radius: 4px;
+    }
+    .grade-badge {
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      text-align: center;
+    }
+    .grade-SSS { background: var(--purple-mystic); color: #fff; text-shadow: 0 0 6px rgba(255, 255, 255, 0.5); }
+    .grade-SS { background: var(--gold-tox); color: #070b09; }
+    .grade-S { background: var(--cyan-bright); color: #070b09; }
+    .grade-A { background: #38bdf8; color: #070b09; }
+    .grade-B { background: #4ade80; color: #070b09; }
+    .grade-C { background: #94a3b8; color: #070b09; }
+    .grade-D { background: #f97316; color: #fff; }
+    .grade-F { background: var(--carmine-bio); color: #fff; }
+
+    /* -------------------------------------------------------------
+       SECTION 2: BREEDING LAIR & PUNNETT PROBABILITIES
+       ------------------------------------------------------------- */
+    .breed-selection-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 650px) {
+      .breed-selection-row { grid-template-columns: 1fr; }
+    }
+    .parent-slot {
+      background: var(--bg-card);
+      border: 2px dashed var(--border-accent);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .parent-slot.assigned {
+      border-style: solid;
+      border-color: var(--cyan-bright);
+    }
+    .clutch-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .clutch-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .clutch-card.empty {
+      border-style: dashed;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      min-height: 120px;
+    }
+    .odds-panel {
+      background: #08100c;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+    .odds-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      border-bottom: 1px dashed #14231b;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 3: 2D MICRO-ARENA COLOSSEUM
+       ------------------------------------------------------------- */
+    .arena-box {
+      background: #060b08;
+      border: 2px solid var(--border-accent);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+    #colosseum-canvas {
+      width: 100%;
+      height: 150px;
+      display: block;
+      background: radial-gradient(circle at 50% 60%, #162c20, #060b08 80%);
+    }
+    .combat-hud {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      padding: 8px 12px;
+      background: rgba(14, 22, 18, 0.95);
+      border-top: 1px solid var(--border-subtle);
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+    .hud-bar {
+      height: 8px;
+      background: #192a20;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 3px;
+    }
+    .hud-fill-hp { background: #22c55e; height: 100%; transition: width 0.1s ease; }
+    .hud-fill-stam { background: #38bdf8; height: 100%; transition: width 0.1s ease; }
+
+    /* -------------------------------------------------------------
+       SECTION 4: 5-LANE CONSIGNMENT AUCTION HOUSE
+       ------------------------------------------------------------- */
+    .auction-lanes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 12px;
+    }
+    .auction-lane {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+    }
+    .auction-lane.active-bid {
+      border-color: var(--gold-tox);
+      box-shadow: 0 0 14px rgba(250, 204, 21, 0.2);
+    }
+    .timer-badge {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gold-tox);
+      background: rgba(250, 204, 21, 0.15);
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(250, 204, 21, 0.3);
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 5: 10-SECOND DISTRESSED CLEARANCE TAB
+       ------------------------------------------------------------- */
+    .clearance-banner {
+      background: linear-gradient(90deg, rgba(255, 51, 102, 0.2), rgba(250, 204, 21, 0.15));
+      border: 1px solid var(--carmine-bio);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .clearance-countdown {
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--carmine-bio);
+      text-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 6: GLOBAL MYSTERY TRADE (WONDER TRADE)
+       ------------------------------------------------------------- */
+    .trade-canvas-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      background: #060a08;
+      border-radius: 12px;
+      border: 1px solid var(--border-accent);
+      margin: 16px 0;
+      min-height: 220px;
+    }
+    #radar-canvas {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+    }
+
+    /* -------------------------------------------------------------
+       WORLD'S FIRST GRAIL CELEBRATION MODAL
+       ------------------------------------------------------------- */
+    .grail-modal-box {
+      border: 2px solid var(--gold-tox) !important;
+      box-shadow: 0 0 50px rgba(250, 204, 21, 0.4) !important;
+      background: linear-gradient(180deg, #1c1809, #0e1612) !important;
+      text-align: center;
+    }
+
+    /* Toast Notification */
+    #toast-banner {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--cyan-bright);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+      display: none;
+      z-index: 200;
+      animation: slideIn 0.25s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app">
+    <!-- Collapsible Monospace God Mode Drawer -->
+    <div id="dev-drawer">
+      <span style="color:#fff; font-weight:700;">⚙️ GOD_MODE_CONSOLE:</span>
+      <button class="dev-btn" onclick="devCheat('cash50k')">+◈50k Credits</button>
+      <button class="dev-btn" onclick="devCheat('cash500k')">+◈500k Credits</button>
+      <button class="dev-btn warn" onclick="devCheat('broke')">Broke Mode (◈50)</button>
+      <button class="dev-btn" onclick="devCheat('rations')">+500 Rations</button>
+      <button class="dev-btn" onclick="devCheat('medicine')">+100 Poultice</button>
+      <button class="dev-btn" onclick="devCheat('glaze')">+50 Glaze</button>
+      <button class="dev-btn" onclick="devCheat('matureClutches')">⚡ Mature All Clutches</button>
+      <button class="dev-btn" onclick="devCheat('spawnTierX')">👑 Spawn Tier X</button>
+      <button class="dev-btn warn" onclick="devCheat('spawnGrail')">🌟 Spawn Grail Specimen</button>
+      <button class="dev-btn" onclick="devCheat('maxIVs')">💯 Max All IVs (SSS+ 100)</button>
+      <button class="dev-btn" onclick="devCheat('winBattle')">⚔️ Instant Win Arena</button>
+      <button class="dev-btn" onclick="devCheat('godMode')">🛡️ Toggle Invincibility</button>
+      <button class="dev-btn" onclick="devCheat('day1')">+1 Day</button>
+      <button class="dev-btn" onclick="devCheat('day7')">+7 Days</button>
+      <button class="dev-btn danger" onclick="devCheat('reset')">🗑️ Reset All Data</button>
+    </div>
+
+    <!-- Header & Resource Ledger -->
+    <header>
+      <div class="header-top">
+        <div class="brand">
+          <svg class="brand-icon" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12c0 3.7 2.01 6.94 5 8.65V22l3.35-1.12C10.9 20.95 11.44 21 12 21c5.52 0 10-4.48 10-10S17.52 2 12 2zm-4 9c-.83 0-1.5-.67-1.5-1.5S7.17 8 8 8s1.5.67 1.5 1.5S8.83 11 8 11zm8 0c-.83 0-1.5-.67-1.5-1.5S15.17 8 16 8s1.5.67 1.5 1.5S16.83 11 16 11z"/>
+          </svg>
+          <div>DENDRO-<span>TYCOON</span></div>
+        </div>
+
+        <div class="top-actions">
+          <button class="btn btn-sm btn-primary" onclick="advanceDay()">📅 Advance Day</button>
+          <button class="icon-btn" id="audio-toggle-btn" onclick="toggleMute()" title="Audio Mute/Unmute">🔊</button>
+          <button class="icon-btn" onclick="openCodexModal()" title="Grail Codex">🌟</button>
+          <button class="icon-btn" onclick="openBackupModal()" title="Backup & Restore">💾</button>
+          <button class="icon-btn" onclick="toggleDevDrawer()" title="God Mode Console">⚙️</button>
+        </div>
+      </div>
+
+      <div class="ledger-strip">
+        <div class="ledger-item">
+          <span>Credits:</span>
+          <span class="ledger-val val-credits" id="display-credits">◈0</span>
+        </div>
+        <div class="ledger-item">
+          <span>Springtails:</span>
+          <span class="ledger-val val-rations" id="display-rations">0 🦗</span>
+        </div>
+        <div class="ledger-item">
+          <span>Poultice:</span>
+          <span class="ledger-val val-poultice" id="display-poultice">0 🧪</span>
+        </div>
+        <div class="ledger-item">
+          <span>Glaze:</span>
+          <span class="ledger-val val-glaze" id="display-glaze">0 🍯</span>
+        </div>
+        <div class="ledger-item">
+          <span>Day:</span>
+          <span class="ledger-val val-day" id="display-day">1</span>
+        </div>
+        <div class="ledger-item">
+          <span>Vault:</span>
+          <span class="ledger-val" id="display-vault-count">0/50</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="tab-bar">
+        <button class="nav-tab active" onclick="switchTab('vault')">🐸 Roster Vault <span class="badge" id="badge-vault">0</span></button>
+        <button class="nav-tab" onclick="switchTab('breeding')">🧬 Breeding Lair <span class="badge" id="badge-clutches">0/5</span></button>
+        <button class="nav-tab" onclick="switchTab('colosseum')">⚔️ Bio-Colosseum</button>
+        <button class="nav-tab" onclick="switchTab('auction')">🏛️ Consignment</button>
+        <button class="nav-tab" onclick="switchTab('clearance')">⚡ 10s Clearance</button>
+        <button class="nav-tab" onclick="switchTab('wondertrade')">🌐 Wonder Trade</button>
+        <button class="nav-tab" onclick="switchTab('logistics')">🌿 Conditioning</button>
+      </nav>
+    </header>
+
+    <!-- MAIN VIEW AREA -->
+    <main>
+      <!-- TAB 1: ROSTER VAULT -->
+      <section id="tab-vault" class="tab-pane active">
+        <div class="vault-toolbar">
+          <input type="text" id="vault-search" class="vault-input" placeholder="Search lineage or morph..." oninput="renderVault()">
+          <select id="vault-sort" class="vault-select" onchange="renderVault()">
+            <option value="value-desc">Sort: Highest Valuation</option>
+            <option value="value-asc">Sort: Lowest Valuation</option>
+            <option value="tier-desc">Sort: Tier (High to Low)</option>
+            <option value="iv-desc">Sort: Total IVs (Best)</option>
+            <option value="recent">Sort: Most Recent</option>
+          </select>
+          <select id="vault-filter-sex" class="vault-select" onchange="renderVault()">
+            <option value="all">Sex: All</option>
+            <option value="M">Male (♂)</option>
+            <option value="F">Female (♀)</option>
+          </select>
+          <select id="vault-filter-tier" class="vault-select" onchange="renderVault()">
+            <option value="all">Tier: All</option>
+            <option value="1">Tier I (Reed Hopper)</option>
+            <option value="2">Tier II (Pumilio)</option>
+            <option value="3">Tier III (Leucomelas)</option>
+            <option value="4">Tier IV (Tinctorius)</option>
+            <option value="5">Tier V (Phantasmal)</option>
+            <option value="6">Tier VI (Granular)</option>
+            <option value="7">Tier VII (Galactonotus)</option>
+            <option value="8">Tier VIII (Terribilis)</option>
+            <option value="9">Tier IX (Primordial)</option>
+            <option value="10">Tier X (Dendro-Archon)</option>
+          </select>
+        </div>
+
+        <div class="vault-grid" id="vault-grid">
+          <!-- Dynamic frog cards injected here -->
+        </div>
+      </section>
+
+      <!-- TAB 2: BREEDING LAIR -->
+      <section id="tab-breeding" class="tab-pane">
+        <div class="card" style="margin-bottom: 16px;">
+          <div class="card-header">
+            <span class="card-title">🧬 Genetic Mating Incubator</span>
+            <button class="btn btn-sm btn-gold" onclick="autoPairSynergy()">✨ Auto-Pair Best Synergy</button>
+          </div>
+
+          <div class="breed-selection-row">
+            <div class="parent-slot" id="sire-slot" onclick="openParentPicker('M')">
+              <span style="font-size:24px;">♂</span>
+              <div style="font-weight:700;" id="sire-name">Select Sire (Male)</div>
+              <div style="font-size:11px; color:var(--text-dim);" id="sire-desc">Tap to assign breeder</div>
+            </div>
+
+            <div style="text-align:center;">
+              <button class="btn btn-primary" id="btn-start-breed" onclick="initiateClutch()" disabled>Initiate Clutch (◈200)</button>
+            </div>
+
+            <div class="parent-slot" id="dam-slot" onclick="openParentPicker('F')">
+              <span style="font-size:24px;">♀</span>
+              <div style="font-weight:700;" id="dam-name">Select Dam (Female)</div>
+              <div style="font-size:11px; color:var(--text-dim);" id="dam-desc">Tap to assign breeder</div>
+            </div>
+          </div>
+
+          <!-- Live Monte Carlo Punnett Predictions -->
+          <div class="odds-panel" id="punnett-panel">
+            <div style="font-weight:700; color:var(--cyan-bright); margin-bottom:6px;">🔬 LIVE MONTE CARLO PROBABILITIES (1,000 Trials):</div>
+            <div id="punnett-output" style="color:var(--text-muted);">
+              Select both a Sire and a Dam above to calculate live Mendelian inheritance, Codominance splits, IV drift distributions, and World's First Grail odds.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🥚 Active Nursery Clutches (4-Day Maturation)</span>
+            <span style="font-size:12px; font-family:var(--font-mono); color:var(--text-muted);">Capacity: 5 Clutches</span>
+          </div>
+          <div class="clutch-container" id="clutches-grid">
+            <!-- 5 Nursery Slots -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: 2D MICRO-ARENA COLOSSEUM -->
+      <section id="tab-colosseum" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">⚔️ Bio-Toxic Micro-Arena Colosseum</span>
+            <div style="display:flex; gap:8px;">
+              <select id="arena-league" class="vault-select" style="padding:4px 8px; font-size:12px;" onchange="updateArenaLeague()">
+                <option value="1">Rank I: Mudflat Novice (Purse: ◈250)</option>
+                <option value="2">Rank II: Canopy Skirmish (Purse: ◈650)</option>
+                <option value="3">Rank III: Leuco Striker (Purse: ◈1,500)</option>
+                <option value="4">Rank IV: Bromeliad Apex (Purse: ◈3,800)</option>
+                <option value="5">Rank V: Grandmaster Cup (Purse: ◈12,000)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 120px Real-Time Procedural Combat Canvas -->
+          <div class="arena-box">
+            <canvas id="colosseum-canvas" width="600" height="150"></canvas>
+            <div class="combat-hud">
+              <div>
+                <div style="display:flex; justify-content:space-between;">
+                  <span id="player-fighter-name" style="color:var(--cyan-bright); font-weight:700;">Player Frog</span>
+                  <span id="player-hp-num">100/100</span>
+                </div>
+                <div class="hud-bar"><div class="hud-fill-hp" id="player-hp-bar" style="width:100%;"></div></div>
+                <div class="hud-bar" style="height:4px; margin-top:2px;"><div class="hud-fill-stam" id="player-stam-bar" style="width:100%;"></div></div>
+              </div>
+
+              <div style="text-align:center; padding:0 8px;">
+                <span id="battle-state-text" style="color:var(--gold-tox); font-weight:700;">READY</span>
+              </div>
+
+              <div>
+                <div style="display:flex; justify-content:space-between;">
+                  <span id="enemy-fighter-name" style="color:var(--carmine-bio); font-weight:700;">Challenger</span>
+                  <span id="enemy-hp-num">100/100</span>
+                </div>
+                <div class="hud-bar"><div class="hud-fill-hp" id="enemy-hp-bar" style="width:100%; background:var(--carmine-bio);"></div></div>
+                <div class="hud-bar" style="height:4px; margin-top:2px;"><div class="hud-fill-stam" id="enemy-stam-bar" style="width:100%;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Arena Controls & Tactical Stances -->
+          <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;">
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+              <span style="font-size:12px; font-weight:600; color:var(--text-muted);">Tactical Stance:</span>
+              <button class="btn btn-sm active" id="stance-aggro" onclick="setStance('Aggressive')">⚡ Aggressive</button>
+              <button class="btn btn-sm" id="stance-def" onclick="setStance('Defensive')">🛡️ Counter/Shell</button>
+              <button class="btn btn-sm" id="stance-tox" onclick="setStance('VenomKite')">🧪 Tox Kite</button>
+            </div>
+
+            <div style="display:flex; gap:6px; align-items:center;">
+              <select id="arena-fighter-select" class="vault-select" style="max-width:180px; padding:6px 10px;" onchange="selectArenaFighter()">
+                <!-- Fighter Options -->
+              </select>
+              <button class="btn btn-sm btn-primary" id="btn-arena-fight" onclick="startArenaDuel()">Start Duel</button>
+              <button class="btn btn-sm" id="btn-arena-speed" onclick="toggleBattleSpeed()">Speed: 1x</button>
+              <button class="btn btn-sm btn-gold" onclick="instantResolveBattle()">⚡ Resolve</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: CONSIGNMENT AUCTION HOUSE -->
+      <section id="tab-auction" class="tab-pane">
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header">
+            <span class="card-title">🏛️ 5-Lane Player Consignment Auction</span>
+            <button class="btn btn-sm btn-primary" onclick="openConsignModal()">+ Consign Specimen to Lane</button>
+          </div>
+          <div class="auction-lanes-grid" id="auction-lanes">
+            <!-- 5 Dedicated Consignment Lanes -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: 10-SECOND DISTRESSED CLEARANCE -->
+      <section id="tab-clearance" class="tab-pane">
+        <div class="clearance-banner">
+          <div>
+            <div style="font-size:18px; font-weight:800; color:#fff;">⚡ DISTRESSED LIQUIDATION ROOST</div>
+            <div style="font-size:12px; color:var(--text-muted);">Surplus & rescued mystery lineages liquidated at 70% to 99% off retail value!</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:12px; font-family:var(--font-mono); color:#cbd5e1;">REFRESH IN:</span>
+            <div class="clearance-countdown" id="clearance-clock">10.0s</div>
+          </div>
+        </div>
+
+        <div class="vault-grid" id="clearance-grid">
+          <!-- 4 Discounted Lots -->
+        </div>
+      </section>
+
+      <!-- TAB 6: GLOBAL MYSTERY TRADE (WONDER TRADE) -->
+      <section id="tab-wondertrade" class="tab-pane">
+        <div class="card" style="max-width:680px; margin:0 auto; text-align:center;">
+          <div class="card-header">
+            <span class="card-title">🌐 Global Bio-Network Wonder Trade</span>
+            <span style="font-size:11px; font-family:var(--font-mono); color:var(--cyan-bright);">8% JACKPOT CHANCE</span>
+          </div>
+
+          <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+            Deposit any frog from your vivarium into the global broker network. Your specimen will be transferred to international researchers in exchange for a randomized international lineage.
+          </p>
+
+          <div class="trade-canvas-wrap">
+            <canvas id="radar-canvas" width="140" height="140"></canvas>
+            <div id="radar-status" style="font-family:var(--font-mono); font-size:12px; color:var(--cyan-bright); margin-top:10px;">
+              BROKER RADAR STANDBY
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap;">
+            <select id="wondertrade-select" class="vault-select" style="max-width:240px;">
+              <!-- Frogs to deposit -->
+            </select>
+            <button class="btn btn-primary" id="btn-wondertrade" onclick="executeWonderTrade()">Broadcast Bio-Signal</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 7: VIVARIUM CONDITIONING & LOGISTICS -->
+      <section id="tab-logistics" class="tab-pane">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+          <!-- Supplies Store -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">📦 Vivarium Supplies Depot</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; background:#08100c; padding:10px; border-radius:8px;">
+                <div>
+                  <div style="font-weight:700;">🦗 Springtail Culturing Pack (+50)</div>
+                  <div style="font-size:11px; color:var(--text-dim);">Feeds frogs, maintaining 100% satiety</div>
+                </div>
+                <button class="btn btn-sm btn-primary" onclick="buySupplies('rations', 50, 100)">◈100</button>
+              </div>
+
+              <div style="display:flex; justify-content:space-between; align-items:center; background:#08100c; padding:10px; border-radius:8px;">
+                <div>
+                  <div style="font-weight:700;">🧪 Chitin Mineral Poultice (+10)</div>
+                  <div style="font-size:11px; color:var(--text-dim);">Cures injuries and fortifies battle shells</div>
+                </div>
+                <button class="btn btn-sm btn-primary" onclick="buySupplies('poultice', 10, 250)">◈250</button>
+              </div>
+
+              <div style="display:flex; justify-content:space-between; align-items:center; background:#08100c; padding:10px; border-radius:8px;">
+                <div>
+                  <div style="font-weight:700;">🍯 Bromeliad Nectar Glaze (+5)</div>
+                  <div style="font-size:11px; color:var(--text-dim);">Polishes frogs for +66% auction hype</div>
+                </div>
+                <button class="btn btn-sm btn-primary" onclick="buySupplies('glaze', 5, 300)">◈300</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conditioning Stations -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🏋️ Daily Conditioning Facility</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="background:#08100c; padding:10px; border-radius:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                  <span style="font-weight:700;">🌧️ High-Humidity Misting Chamber</span>
+                  <button class="btn btn-sm" onclick="runConditioning('mist')">Mist All (◈50)</button>
+                </div>
+                <div style="font-size:11px; color:var(--text-dim);">Restores 100% Energy to all frogs and relieves daily fatigue.</div>
+              </div>
+
+              <div style="background:#08100c; padding:10px; border-radius:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                  <span style="font-weight:700;">🛡️ Chitin Mineral Bathing</span>
+                  <button class="btn btn-sm" onclick="runConditioning('chitin')">Dust Roster (10 🧪)</button>
+                </div>
+                <div style="font-size:11px; color:var(--text-dim);">Heals combat injuries and grants +1 Chitin Density IV.</div>
+              </div>
+
+              <div style="background:#08100c; padding:10px; border-radius:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                  <span style="font-weight:700;">🎯 Bio-Shock & Tongue Reflex Drills</span>
+                  <button class="btn btn-sm" onclick="runConditioning('reflex')">Drill (20 🦗)</button>
+                </div>
+                <div style="font-size:11px; color:var(--text-dim);">Sharpens reflexes, granting +1 Agility or Bio-Shock IV.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- DOSSIER INSPECTION MODAL -->
+    <div class="modal-overlay" id="dossier-modal">
+      <div class="modal-box">
+        <button class="modal-close" onclick="closeDossierModal()">✕</button>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <input type="text" id="dossier-name-input" class="vault-input" style="font-size:16px; font-weight:700; width:auto; max-width:240px;" onchange="saveFrogName()">
+          <span id="dossier-tier-badge" class="badge" style="font-size:12px; background:var(--cyan-bright); color:#070b09;"></span>
+          <span id="dossier-sex-badge" style="font-weight:800; font-size:16px;"></span>
+        </div>
+
+        <div class="dossier-grid">
+          <div class="dossier-canvas-wrap">
+            <canvas id="dossier-canvas" class="dossier-canvas" width="180" height="180"></canvas>
+            <div style="text-align:center; font-family:var(--font-mono); font-size:12px;">
+              <div style="color:var(--text-dim);">Estimated Valuation:</div>
+              <div style="font-size:16px; font-weight:800; color:var(--gold-tox);" id="dossier-val-text">◈0</div>
+            </div>
+            <button class="btn btn-danger btn-sm" style="width:100%;" onclick="wholesaleQuickSell()">Quick Wholesale (77%)</button>
+          </div>
+
+          <div>
+            <div style="font-weight:700; font-size:13px; margin-bottom:4px; color:#fff;">Genetic Lineage & Morphs:</div>
+            <div class="tag-container" id="dossier-tags" style="margin-bottom:12px;"></div>
+
+            <div style="font-weight:700; font-size:13px; color:#fff;">Combat IV Grades (1-100):</div>
+            <table class="iv-table" id="dossier-iv-table">
+              <!-- Dynamically populated IV bars -->
+            </table>
+
+            <div style="margin-top:12px; display:flex; gap:6px; flex-wrap:wrap;">
+              <button class="btn btn-sm" onclick="sendDossierFrogTo('breed')">🧬 To Breeder</button>
+              <button class="btn btn-sm" onclick="sendDossierFrogTo('arena')">⚔️ To Arena</button>
+              <button class="btn btn-sm" onclick="sendDossierFrogTo('auction')">🏛️ To Auction</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CANDLING INSPECTION TOOL MODAL -->
+    <div class="modal-overlay" id="candling-modal">
+      <div class="modal-box" style="max-width:440px; text-align:center;">
+        <button class="modal-close" onclick="closeCandlingModal()">✕</button>
+        <div style="font-size:18px; font-weight:800; color:var(--cyan-bright); margin-bottom:8px;">🔬 UV EMBRYO CANDLING TOOL</div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+          Day-2 Ultraviolet transillumination reveals the nascent genome prior to hatching. You may choose to incubate or cull this clutch for a 50% refund.
+        </p>
+
+        <canvas id="candling-canvas" width="160" height="160" style="background:#050806; border-radius:50%; border:2px dashed var(--cyan-bright); margin:0 auto 12px;"></canvas>
+
+        <div id="candling-data" style="text-align:left; background:#08100c; padding:10px; border-radius:8px; font-family:var(--font-mono); font-size:11px; margin-bottom:14px;">
+          <!-- Preview specs -->
+        </div>
+
+        <div style="display:flex; justify-content:center; gap:10px;">
+          <button class="btn btn-danger" onclick="cullCurrentClutch()">✂️ Cull Dud (50% Refund)</button>
+          <button class="btn btn-primary" onclick="closeCandlingModal()">Proceed Incubation</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PARENT PICKER MODAL FOR BREEDING -->
+    <div class="modal-overlay" id="parent-picker-modal">
+      <div class="modal-box">
+        <button class="modal-close" onclick="closeParentPicker()">✕</button>
+        <div style="font-size:16px; font-weight:800; color:#fff; margin-bottom:12px;" id="parent-picker-title">Select Breeder</div>
+        <div class="vault-grid" id="parent-picker-grid" style="max-height:60vh; overflow-y:auto;">
+          <!-- Parent candidates -->
+        </div>
+      </div>
+    </div>
+
+    <!-- CONSIGNMENT SELECTOR MODAL -->
+    <div class="modal-overlay" id="consign-modal">
+      <div class="modal-box">
+        <button class="modal-close" onclick="closeConsignModal()">✕</button>
+        <div style="font-size:16px; font-weight:800; color:#fff; margin-bottom:12px;">Select Specimen for Auction Consignment</div>
+        <div class="vault-grid" id="consign-picker-grid" style="max-height:60vh; overflow-y:auto;">
+          <!-- Consignment options -->
+        </div>
+      </div>
+    </div>
+
+    <!-- WORLD'S FIRST GRAIL DISCOVERY MODAL -->
+    <div class="modal-overlay" id="grail-modal">
+      <div class="modal-box grail-modal-box" style="max-width:500px;">
+        <div style="font-size:28px; margin-bottom:8px;">🌟 🧬 🌟</div>
+        <div style="font-size:22px; font-weight:900; color:var(--gold-tox); letter-spacing:1px; margin-bottom:6px;">
+          WORLD'S FIRST DISCOVERY!
+        </div>
+        <div style="font-size:13px; color:var(--text-main); margin-bottom:14px;" id="grail-modal-desc">
+          A legendary genetic combination has synthesized in your vivarium.
+        </div>
+
+        <canvas id="grail-canvas" width="160" height="160" style="background:#090d0b; border-radius:12px; border:2px solid var(--gold-tox); margin:0 auto 12px;"></canvas>
+
+        <div style="background:rgba(250, 204, 21, 0.1); border:1px solid var(--gold-tox); border-radius:8px; padding:10px; margin-bottom:14px; font-family:var(--font-mono); font-size:12px;">
+          <div>💰 Grant Awarded: <strong style="color:var(--gold-tox);">+◈50,000 Credits</strong></div>
+          <div>📈 Auction Multiplier: <strong style="color:var(--cyan-bright);">8.0x Lifetime Multiplier</strong></div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <input type="text" id="grail-name-input" class="vault-input" style="text-align:center; font-weight:700;" placeholder="Enter Legendary Name...">
+          <button class="btn btn-gold" onclick="confirmGrailDiscovery()">Seal into Global Codex</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CODEX & ACHIEVEMENTS MODAL -->
+    <div class="modal-overlay" id="codex-modal">
+      <div class="modal-box" style="max-width:600px;">
+        <button class="modal-close" onclick="closeCodexModal()">✕</button>
+        <div style="font-size:18px; font-weight:800; color:#fff; margin-bottom:8px;">🌟 World's First Grail Codex</div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">
+          Permanent scientific record of Apex Grail discoveries across history.
+        </p>
+
+        <div id="codex-list" style="display:flex; flex-direction:column; gap:10px;">
+          <!-- Codex entries -->
+        </div>
+      </div>
+    </div>
+
+    <!-- BACKUP / RESTORE MODAL -->
+    <div class="modal-overlay" id="backup-modal">
+      <div class="modal-box" style="max-width:550px;">
+        <button class="modal-close" onclick="closeBackupModal()">✕</button>
+        <div style="font-size:18px; font-weight:800; color:#fff; margin-bottom:8px;">💾 Backup & Cloud State Sync</div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+          Export your encrypted vivarium ledger to clipboard or restore a previous game state.
+        </p>
+
+        <textarea id="backup-textarea" class="vault-input" style="width:100%; height:140px; font-size:12px !important; margin-bottom:12px;" placeholder="Paste JSON save data here..."></textarea>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="copySaveToClipboard()">📋 Copy JSON to Clipboard</button>
+          <button class="btn btn-gold" onclick="restoreSaveFromTextarea()">📥 Restore Saved State</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Toast Notification -->
+    <div id="toast-banner">Notice</div>
+  </div>
+
+  <!-- JAVASCRIPT ENGINE -->
+  <script>
+    /* =========================================================================
+       1. GAME CONSTANTS & DATA DEFINITIONS
+       ========================================================================= */
+    const TIERS = [
+      { id: 1, name: "Micro Reed Hopper", role: "Scout", weapon: "Tongue Lash", baseVal: 120, color: "#4ade80", secondary: "#166534" },
+      { id: 2, name: "Strawberry Pumilio", role: "Skirmisher", weapon: "Cauterizing Secretion", baseVal: 320, color: "#ef4444", secondary: "#1e3a8a" },
+      { id: 3, name: "Bumblebee Leucomelas", role: "Striker", weapon: "Paralyzing Spore Barbs", baseVal: 850, color: "#facc15", secondary: "#0f172a" },
+      { id: 4, name: "Dyeing Tinctorius", role: "Bruiser", weapon: "Chitinous Crest Slam", baseVal: 2100, color: "#3b82f6", secondary: "#fef08a" },
+      { id: 5, name: "Phantasmal Epipedobates", role: "Venom-Slinger", weapon: "Epibatidine Neuro-Burst", baseVal: 5200, color: "#dc2626", secondary: "#86efac" },
+      { id: 6, name: "Granular Oophaga", role: "Assassin", weapon: "Puncturing Toxic Claws", baseVal: 11500, color: "#ec4899", secondary: "#701a75" },
+      { id: 7, name: "Splashback Galactonotus", role: "Artillery", weapon: "Caustic Acid Slime", baseVal: 26000, color: "#f97316", secondary: "#111827" },
+      { id: 8, name: "Golden Terribilis", role: "Apex Lethalizer", weapon: "Pure Batrachotoxin Veil", baseVal: 62000, color: "#eab308", secondary: "#ca8a04" },
+      { id: 9, name: "Primordial Dendrobates", role: "Bio-Titan", weapon: "Hyper-Reactive Bio-Flash", baseVal: 145000, color: "#8b5cf6", secondary: "#06b6d4" },
+      { id: 10, name: "Mythic Dendro-Archon", role: "Overlord", weapon: "Extinction Neuro-Hex", baseVal: 360000, color: "#00f2a6", secondary: "#facc15" }
+    ];
+
+    const RECESSIVES = [
+      { id: 0, name: "Melanistic", desc: "Vantablack Pigment (+15% Armor)", statMod: { armor: 15 }, color: "#0c0f0d" },
+      { id: 1, name: "Albino", desc: "Porcelain Ivory (+15% Agility)", statMod: { agility: 15 }, color: "#f8fafc" },
+      { id: 2, name: "Axanthic", desc: "Monochrome Steel (+15% Vitality)", statMod: { vitality: 15 }, color: "#94a3b8" },
+      { id: 3, name: "Hyper-Erythristic", desc: "Bloodfire Carmine (+15% Potency)", statMod: { potency: 15 }, color: "#e11d48" },
+      { id: 4, name: "Bioluminescent", desc: "Phosphor Glow (+20% Bio-Shock)", statMod: { shock: 20 }, color: "#00f2a6" },
+      { id: 5, name: "Chimera Mosaic", desc: "Split Dual-Pigment (+35% All Stats, 5x Value)", statMod: { all: 35 }, color: "#c084fc", ultra: true }
+    ];
+
+    const CODOMINANTS = [
+      { id: 0, hetName: "Spined Wart", superName: "Super Quilled Chitin", hetBonus: "+10% Armor", superBonus: "+25% Potency & Armor" },
+      { id: 1, hetName: "Leopard Reticulation", superName: "Super Jaguar Maze", hetBonus: "+10% Agility", superBonus: "+25% Agility & Crit" },
+      { id: 2, hetName: "Cobalt Sheen", superName: "Super High-Voltage Mirror", hetBonus: "+10% Shock", superBonus: "+25% Armor & Stamina" },
+      { id: 3, hetName: "Goliath Ribbing", superName: "Super Titan Bulwark", hetBonus: "+10% Vitality", superBonus: "+25% HP & Knockback" }
+    ];
+
+    const GRAILS = [
+      {
+        id: "supernova",
+        name: "Supernova Solar-Archon",
+        check: (f) => f.codominants[0] === 2 && f.recessives[3] === 2 && f.recessives[4] === 2,
+        desc: "Super Quilled Chitin + Hyper-Erythristic + Bioluminescent"
+      },
+      {
+        id: "abyssal",
+        name: "Abyssal Phantom",
+        check: (f) => f.codominants[1] === 2 && f.recessives[0] === 2 && f.recessives[2] === 2,
+        desc: "Super Jaguar Maze + Melanistic + Axanthic"
+      },
+      {
+        id: "genesis",
+        name: "Genesis Primordial",
+        check: (f) => f.codominants[3] === 2 && f.codominants[2] === 2 && f.recessives[5] === 2,
+        desc: "Super Titan Bulwark + Super High-Voltage Mirror + Chimera Mosaic"
+      }
+    ];
+
+    const SYNDICATES = [
+      { name: "Apex Bio-Labs", trait: "High IV Seeker", mult: 1.25 },
+      { name: "Amazonian Reserve", trait: "Chimera & Morphs", mult: 1.35 },
+      { name: "Neo-Vivariums Tokyo", trait: "Codominant Collector", mult: 1.3 },
+      { name: "Kyoto Herpetology", trait: "Pumilio & Terribilis", mult: 1.2 },
+      { name: "Cartel Batrachia", trait: "Grail & Archon Sniper", mult: 1.45 }
+    ];
+
+    /* =========================================================================
+       2. WEB AUDIO API SYNTHESIS ENGINE (ZERO CDNS)
+       ========================================================================= */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) this.ctx = new AudioContextClass();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playClick() {
+        if (this.muted || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(440, this.ctx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.04);
+      }
+      playRibbit() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const mod = this.ctx.createOscillator();
+        const modGain = this.ctx.createGain();
+        const gain = this.ctx.createGain();
+
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.linearRampToValueAtTime(220, now + 0.08);
+        osc.frequency.linearRampToValueAtTime(110, now + 0.18);
+
+        mod.frequency.setValueAtTime(40, now);
+        modGain.gain.setValueAtTime(80, now);
+        mod.connect(osc.frequency);
+
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.2, now + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        mod.start(now);
+        osc.stop(now + 0.22);
+        mod.stop(now + 0.22);
+      }
+      playHit() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.exponentialRampToValueAtTime(35, now + 0.12);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      }
+      playCrit() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(1200, now);
+        osc.frequency.exponentialRampToValueAtTime(1900, now + 0.15);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.18);
+      }
+      playGavel() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(90, now);
+        osc.frequency.exponentialRampToValueAtTime(30, now + 0.18);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      }
+      playFanfare() {
+        if (this.muted || !this.ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        notes.forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const t = this.ctx.currentTime + (i * 0.1);
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.2, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.35);
+        });
+      }
+      playCoin() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc1 = this.ctx.createOscillator();
+        const osc2 = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc1.frequency.setValueAtTime(987.77, now);
+        osc2.frequency.setValueAtTime(1318.51, now + 0.08);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.08);
+        osc2.start(now + 0.08);
+        osc2.stop(now + 0.25);
+      }
+    }
+    const sound = new SoundEngine();
+
+    function initAudioOnTouch() {
+      sound.init();
+      window.removeEventListener('click', initAudioOnTouch);
+      window.removeEventListener('touchstart', initAudioOnTouch);
+    }
+    window.addEventListener('click', initAudioOnTouch);
+    window.addEventListener('touchstart', initAudioOnTouch);
+
+    function toggleMute() {
+      sound.init();
+      sound.muted = !sound.muted;
+      document.getElementById("audio-toggle-btn").textContent = sound.muted ? "🔇" : "🔊";
+      showToast(sound.muted ? "Audio Muted" : "Audio Enabled");
+    }
+
+    /* =========================================================================
+       3. STATE MANAGEMENT & DATA PERSISTENCE
+       ========================================================================= */
+    const STORAGE_KEY = "dendro_tycoon_save_v1";
+
+    let state = {
+      credits: 1800,
+      rations: 60,
+      poultice: 15,
+      glaze: 5,
+      day: 1,
+      godMode: false,
+      roster: [],
+      clutches: [],
+      auctionLanes: [null, null, null, null, null],
+      clearanceLots: [],
+      codex: [],
+      selectedSireId: null,
+      selectedDamId: null,
+      inspectingFrogId: null,
+      candlingClutchIndex: null,
+      parentPickerMode: null, // 'M' or 'F'
+      arenaLeague: 1,
+      arenaStance: "Aggressive",
+      arenaSpeed: 1,
+      selectedArenaFighterId: null,
+      discoveredGrailsCount: 0
+    };
+
+    function generateId() {
+      return "df_" + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+    }
+
+    /* IV Grade Helpers */
+    function getIVGrade(val) {
+      if (val >= 100) return { grade: "SSS+", cls: "grade-SSS" };
+      if (val >= 96) return { grade: "SS", cls: "grade-SS" };
+      if (val >= 90) return { grade: "S", cls: "grade-S" };
+      if (val >= 76) return { grade: "A", cls: "grade-A" };
+      if (val >= 61) return { grade: "B", cls: "grade-B" };
+      if (val >= 41) return { grade: "C", cls: "grade-C" };
+      if (val >= 21) return { grade: "D", cls: "grade-D" };
+      return { grade: "F", cls: "grade-F" };
+    }
+
+    /* Valuation Algorithm */
+    function calculateValuation(frog) {
+      const tierDef = TIERS.find(t => t.id === frog.tier) || TIERS[0];
+      let val = tierDef.baseVal;
+
+      // IV score multiplier (1.0x to 2.2x)
+      const ivSum = frog.ivs.potency + frog.ivs.agility + frog.ivs.armor + frog.ivs.vitality + frog.ivs.shock;
+      const ivMult = 0.8 + (ivSum / 500) * 1.4;
+      val *= ivMult;
+
+      // Recessives multiplier
+      frog.recessives.forEach((r, idx) => {
+        if (r === 2) {
+          val *= (idx === 5) ? 5.0 : 1.7; // Chimera is 5.0x
+        } else if (r === 1) {
+          val *= 1.2; // Het carrier bonus
+        }
+      });
+
+      // Codominants multiplier
+      frog.codominants.forEach(c => {
+        if (c === 2) val *= 2.0;
+        else if (c === 1) val *= 1.35;
+      });
+
+      // Grail multiplier
+      if (frog.isGrail) {
+        val *= 8.0;
+      }
+
+      return Math.round(val);
+    }
+
+    /* Frog Factory */
+    function createFrog(tier = 1, sex = null, overrides = {}) {
+      const isMale = sex ? (sex === "M") : (Math.random() < 0.5);
+      const tierDef = TIERS.find(t => t.id === tier) || TIERS[0];
+
+      const recessives = [0, 0, 0, 0, 0, 0];
+      if (Math.random() < 0.25) recessives[Math.floor(Math.random() * 5)] = 1; // 25% random het
+
+      const codominants = [0, 0, 0, 0];
+      if (Math.random() < 0.2) codominants[Math.floor(Math.random() * 4)] = 1;
+
+      const frog = {
+        id: generateId(),
+        name: `${tierDef.name.split(" ")[0]} #${Math.floor(100 + Math.random() * 900)}`,
+        tier: tier,
+        sex: isMale ? "M" : "F",
+        recessives: recessives,
+        codominants: codominants,
+        ivs: {
+          potency: Math.floor(20 + Math.random() * 70),
+          agility: Math.floor(20 + Math.random() * 70),
+          armor: Math.floor(20 + Math.random() * 70),
+          vitality: Math.floor(20 + Math.random() * 70),
+          shock: Math.floor(20 + Math.random() * 70)
+        },
+        energy: 100,
+        satiety: 100,
+        isInjured: false,
+        wins: 0,
+        battles: 0,
+        isGrail: false,
+        originTag: "Dendro Vivarium Prime",
+        acquiredDay: state.day,
+        ...overrides
+      };
+
+      // Check if born a Grail
+      GRAILS.forEach(g => {
+        if (g.check(frog)) {
+          frog.isGrail = true;
+          frog.grailId = g.id;
+          frog.name = `🌟 ${g.name}`;
+        }
+      });
+
+      frog.valuation = calculateValuation(frog);
+      return frog;
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.error("Storage error:", e);
+      }
+    }
+
+    function loadState() {
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          state = { ...state, ...parsed };
+          return;
+        } catch (e) {
+          console.warn("Save corrupted, seeding default state.");
+        }
+      }
+      seedInitialState();
+    }
+
+    function seedInitialState() {
+      state.credits = 1800;
+      state.rations = 80;
+      state.poultice = 15;
+      state.glaze = 6;
+      state.day = 1;
+      state.roster = [
+        createFrog(1, "M", { name: "Starter Reed ♂", recessives: [1, 0, 0, 0, 0, 0] }),
+        createFrog(1, "F", { name: "Starter Reed ♀", recessives: [1, 0, 0, 0, 0, 0] }),
+        createFrog(2, "F", { name: "Scarlet Gem ♀", codominants: [1, 0, 0, 0] })
+      ];
+      state.clutches = [];
+      state.auctionLanes = [null, null, null, null, null];
+      state.codex = [];
+      generateClearanceLots();
+      saveState();
+    }
+
+    /* =========================================================================
+       4. PROCEDURAL 2D FROG CANVAS RENDERER
+       ========================================================================= */
+    function drawFrogToCanvas(canvas, frog, opts = {}) {
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      if (!frog) return;
+
+      const tierDef = TIERS.find(t => t.id === frog.tier) || TIERS[0];
+      let baseColor = tierDef.color;
+      let secondaryColor = tierDef.secondary;
+
+      // Handle Recessive visual overrides
+      const isMelanistic = frog.recessives[0] === 2;
+      const isAlbino = frog.recessives[1] === 2;
+      const isAxanthic = frog.recessives[2] === 2;
+      const isHyperEry = frog.recessives[3] === 2;
+      const isBiolum = frog.recessives[4] === 2;
+      const isChimera = frog.recessives[5] === 2;
+
+      if (isMelanistic) { baseColor = "#0f1712"; secondaryColor = "#050806"; }
+      else if (isAlbino) { baseColor = "#f8fafc"; secondaryColor = "#fecdd3"; }
+      else if (isAxanthic) { baseColor = "#94a3b8"; secondaryColor = "#334155"; }
+      else if (isHyperEry) { baseColor = "#e11d48"; secondaryColor = "#9f1239"; }
+
+      const cx = w / 2;
+      const cy = h / 2 + 6;
+      const scale = (opts.scale || 1) * (w / 140);
+      const flip = opts.flip || false;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      if (flip) ctx.scale(-1, 1);
+
+      // Bioluminescent Glow
+      if (isBiolum || frog.isGrail) {
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = frog.isGrail ? "#facc15" : "#00f2a6";
+      }
+
+      // 1. Hind Legs
+      ctx.fillStyle = secondaryColor;
+      // Left leg
+      ctx.beginPath();
+      ctx.ellipse(-32 * scale, 14 * scale, 16 * scale, 8 * scale, -0.4, 0, Math.PI * 2);
+      ctx.fill();
+      // Right leg
+      ctx.beginPath();
+      ctx.ellipse(32 * scale, 14 * scale, 16 * scale, 8 * scale, 0.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Webbed Toes
+      ctx.strokeStyle = secondaryColor;
+      ctx.lineWidth = 2.5 * scale;
+      ctx.beginPath();
+      ctx.moveTo(-42 * scale, 16 * scale);
+      ctx.lineTo(-48 * scale, 22 * scale);
+      ctx.moveTo(-40 * scale, 18 * scale);
+      ctx.lineTo(-42 * scale, 25 * scale);
+      ctx.moveTo(42 * scale, 16 * scale);
+      ctx.lineTo(48 * scale, 22 * scale);
+      ctx.moveTo(40 * scale, 18 * scale);
+      ctx.lineTo(42 * scale, 25 * scale);
+      ctx.stroke();
+
+      // 2. Forearms
+      ctx.beginPath();
+      ctx.ellipse(-20 * scale, 18 * scale, 6 * scale, 12 * scale, 0.2, 0, Math.PI * 2);
+      ctx.ellipse(20 * scale, 18 * scale, 6 * scale, 12 * scale, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 3. Body Torso
+      ctx.fillStyle = baseColor;
+      ctx.beginPath();
+      ctx.ellipse(0, 4 * scale, 26 * scale, 22 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Chimera Split Pigment Effect
+      if (isChimera) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, -22 * scale, 40 * scale, 50 * scale);
+        ctx.clip();
+        ctx.fillStyle = "#8b5cf6";
+        ctx.beginPath();
+        ctx.ellipse(0, 4 * scale, 26 * scale, 22 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Codominant 1: Leopard Reticulation (Spots)
+      if (frog.codominants[1] > 0) {
+        ctx.fillStyle = (frog.codominants[1] === 2) ? "#facc15" : "#090d0b";
+        ctx.beginPath();
+        ctx.arc(-8 * scale, 2 * scale, 3 * scale, 0, Math.PI * 2);
+        ctx.arc(6 * scale, -2 * scale, 4 * scale, 0, Math.PI * 2);
+        ctx.arc(10 * scale, 10 * scale, 2.5 * scale, 0, Math.PI * 2);
+        ctx.arc(-10 * scale, 12 * scale, 3.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Codominant 0: Spined Wart (Triangular Chitin Protrusions)
+      if (frog.codominants[0] > 0) {
+        ctx.fillStyle = (frog.codominants[0] === 2) ? "#ef4444" : "#f59e0b";
+        for (let i = -12; i <= 12; i += 6) {
+          ctx.beginPath();
+          ctx.moveTo(i * scale, (2 + Math.abs(i) * 0.3) * scale);
+          ctx.lineTo((i + 2) * scale, (-4 - (frog.codominants[0] === 2 ? 4 : 2)) * scale);
+          ctx.lineTo((i + 4) * scale, (2 + Math.abs(i) * 0.3) * scale);
+          ctx.fill();
+        }
+      }
+
+      // Codominant 2: Cobalt Sheen (Gloss Mirror)
+      if (frog.codominants[2] > 0) {
+        ctx.strokeStyle = "rgba(0, 212, 255, 0.7)";
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.arc(0, 2 * scale, 18 * scale, -Math.PI * 0.75, -Math.PI * 0.25);
+        ctx.stroke();
+      }
+
+      // 4. Bulging Eyes & Pupils
+      ctx.shadowBlur = 0;
+      // Left eye
+      ctx.fillStyle = isAlbino ? "#f43f5e" : "#090d0b";
+      ctx.beginPath();
+      ctx.arc(-14 * scale, -14 * scale, 7 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      // Right eye
+      ctx.beginPath();
+      ctx.arc(14 * scale, -14 * scale, 7 * scale, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eye Iris Rings
+      ctx.fillStyle = isAlbino ? "#fda4af" : (frog.isGrail ? "#facc15" : "#22c55e");
+      ctx.beginPath();
+      ctx.arc(-14 * scale, -14 * scale, 4 * scale, 0, Math.PI * 2);
+      ctx.arc(14 * scale, -14 * scale, 4 * scale, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Dilated Slit Pupils
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.ellipse(-14 * scale, -14 * scale, 1.5 * scale, 3.5 * scale, 0.1, 0, Math.PI * 2);
+      ctx.ellipse(14 * scale, -14 * scale, 1.5 * scale, 3.5 * scale, -0.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Snout Nostrils & Mouth
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.3)";
+      ctx.lineWidth = 1.5 * scale;
+      ctx.beginPath();
+      ctx.arc(0, -6 * scale, 8 * scale, 0.2, Math.PI - 0.2);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    /* =========================================================================
+       5. SYSTEM 1: ROSTER VAULT & MONOSPACE DOSSIERS
+       ========================================================================= */
+    function renderVault() {
+      const grid = document.getElementById("vault-grid");
+      const search = document.getElementById("vault-search").value.toLowerCase();
+      const sort = document.getElementById("vault-sort").value;
+      const filterSex = document.getElementById("vault-filter-sex").value;
+      const filterTier = document.getElementById("vault-filter-tier").value;
+
+      let list = [...state.roster];
+
+      // Filter
+      if (search) {
+        list = list.filter(f => f.name.toLowerCase().includes(search) || TIERS.find(t => t.id === f.tier).name.toLowerCase().includes(search));
+      }
+      if (filterSex !== "all") {
+        list = list.filter(f => f.sex === filterSex);
+      }
+      if (filterTier !== "all") {
+        list = list.filter(f => f.tier === parseInt(filterTier));
+      }
+
+      // Sort
+      if (sort === "value-desc") list.sort((a, b) => b.valuation - a.valuation);
+      else if (sort === "value-asc") list.sort((a, b) => a.valuation - b.valuation);
+      else if (sort === "tier-desc") list.sort((a, b) => b.tier - a.tier);
+      else if (sort === "iv-desc") {
+        const sumIV = f => Object.values(f.ivs).reduce((a, c) => a + c, 0);
+        list.sort((a, b) => sumIV(b) - sumIV(a));
+      } else if (sort === "recent") {
+        list.reverse();
+      }
+
+      grid.innerHTML = "";
+      if (list.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-dim);">No specimens found matching filters.</div>`;
+        return;
+      }
+
+      list.forEach(frog => {
+        const tierDef = TIERS.find(t => t.id === frog.tier);
+        const card = document.createElement("div");
+        card.className = `frog-card ${frog.isGrail ? "grail" : ""}`;
+        card.onclick = () => openDossier(frog.id);
+
+        const ivTotal = Object.values(frog.ivs).reduce((a, b) => a + b, 0);
+
+        // Tags
+        let tagsHtml = "";
+        if (frog.isGrail) tagsHtml += `<span class="tag tag-grail">🌟 GRAIL</span>`;
+        frog.recessives.forEach((r, idx) => {
+          if (r === 2) tagsHtml += `<span class="tag tag-visual">${RECESSIVES[idx].name}</span>`;
+          else if (r === 1) tagsHtml += `<span class="tag tag-het">Het ${RECESSIVES[idx].name.slice(0, 5)}</span>`;
+        });
+        frog.codominants.forEach((c, idx) => {
+          if (c === 2) tagsHtml += `<span class="tag tag-codom">${CODOMINANTS[idx].superName}</span>`;
+          else if (c === 1) tagsHtml += `<span class="tag tag-codom">${CODOMINANTS[idx].hetName}</span>`;
+        });
+
+        card.innerHTML = `
+          <div class="card-top-row">
+            <canvas class="frog-thumb" width="72" height="72" id="canvas-thumb-${frog.id}"></canvas>
+            <div class="frog-meta">
+              <div class="frog-name">${frog.name}</div>
+              <div class="frog-tier">T${frog.tier}: ${tierDef.name} <span class="frog-sex ${frog.sex === 'M' ? 'sex-male' : 'sex-female'}">${frog.sex === 'M' ? '♂' : '♀'}</span></div>
+              <div class="tag-container">${tagsHtml}</div>
+            </div>
+          </div>
+          <div class="card-stat-bar">
+            <span>IV Sum: <strong>${ivTotal}/500</strong></span>
+            <span style="color:var(--gold-tox); font-weight:700;">◈${frog.valuation.toLocaleString()}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+
+        // Render Canvas
+        setTimeout(() => {
+          const cvs = document.getElementById(`canvas-thumb-${frog.id}`);
+          if (cvs) drawFrogToCanvas(cvs, frog, { scale: 0.95 });
+        }, 10);
+      });
+
+      updateTopLedger();
+    }
+
+    function openDossier(frogId) {
+      sound.playClick();
+      const frog = state.roster.find(f => f.id === frogId);
+      if (!frog) return;
+      state.inspectingFrogId = frogId;
+
+      document.getElementById("dossier-name-input").value = frog.name;
+      const tierDef = TIERS.find(t => t.id === frog.tier);
+      document.getElementById("dossier-tier-badge").textContent = `Tier ${frog.tier}: ${tierDef.name}`;
+      document.getElementById("dossier-sex-badge").textContent = frog.sex === 'M' ? '♂ Male' : '♀ Female';
+      document.getElementById("dossier-sex-badge").className = frog.sex === 'M' ? 'sex-male' : 'sex-female';
+      document.getElementById("dossier-val-text").textContent = `◈${frog.valuation.toLocaleString()}`;
+
+      // Canvas
+      const canvas = document.getElementById("dossier-canvas");
+      drawFrogToCanvas(canvas, frog, { scale: 1.4 });
+
+      // Tags
+      const tagsContainer = document.getElementById("dossier-tags");
+      tagsContainer.innerHTML = "";
+      if (frog.isGrail) tagsContainer.innerHTML += `<span class="tag tag-grail">🌟 WORLD'S FIRST GRAIL</span>`;
+      frog.recessives.forEach((r, idx) => {
+        if (r === 2) tagsContainer.innerHTML += `<span class="tag tag-visual">${RECESSIVES[idx].name} (Visual)</span>`;
+        else if (r === 1) tagsContainer.innerHTML += `<span class="tag tag-het">Het ${RECESSIVES[idx].name} (Carrier)</span>`;
+      });
+      frog.codominants.forEach((c, idx) => {
+        if (c === 2) tagsContainer.innerHTML += `<span class="tag tag-codom">${CODOMINANTS[idx].superName}</span>`;
+        else if (c === 1) tagsContainer.innerHTML += `<span class="tag tag-codom">${CODOMINANTS[idx].hetName}</span>`;
+      });
+
+      // IV Table
+      const ivTable = document.getElementById("dossier-iv-table");
+      ivTable.innerHTML = "";
+      const stats = [
+        { label: "Tox-Potency", val: frog.ivs.potency },
+        { label: "Agility / Reflex", val: frog.ivs.agility },
+        { label: "Chitin Density", val: frog.ivs.armor },
+        { label: "Lung Vitality", val: frog.ivs.vitality },
+        { label: "Bio-Shock", val: frog.ivs.shock }
+      ];
+
+      stats.forEach(st => {
+        const grade = getIVGrade(st.val);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td style="width:130px; color:var(--text-muted);">${st.label}</td>
+          <td style="width:36px; text-align:right; font-weight:700;">${st.val}</td>
+          <td>
+            <div class="iv-bar-bg">
+              <div class="iv-bar-fill" style="width:${st.val}%;"></div>
+            </div>
+          </td>
+          <td style="width:48px; text-align:center;">
+            <span class="grade-badge ${grade.cls}">${grade.grade}</span>
+          </td>
+        `;
+        ivTable.appendChild(tr);
+      });
+
+      document.getElementById("dossier-modal").classList.add("open");
+    }
+
+    function closeDossierModal() {
+      document.getElementById("dossier-modal").classList.remove("open");
+      state.inspectingFrogId = null;
+    }
+
+    function saveFrogName() {
+      const frog = state.roster.find(f => f.id === state.inspectingFrogId);
+      if (frog) {
+        const input = document.getElementById("dossier-name-input").value.trim();
+        if (input) {
+          frog.name = input;
+          saveState();
+          renderVault();
+          showToast("Lineage name updated");
+        }
+      }
+    }
+
+    function wholesaleQuickSell() {
+      const frog = state.roster.find(f => f.id === state.inspectingFrogId);
+      if (!frog) return;
+      if (state.roster.length <= 1) {
+        showToast("⚠️ Must maintain at least 1 frog in vivarium!");
+        return;
+      }
+      const wholesalePrice = Math.floor(frog.valuation * 0.77);
+      state.credits += wholesalePrice;
+      state.roster = state.roster.filter(f => f.id !== frog.id);
+      sound.playCoin();
+      saveState();
+      closeDossierModal();
+      renderVault();
+      showToast(`Quick-sold for ◈${wholesalePrice.toLocaleString()} (77% Wholesale)`);
+    }
+
+    function sendDossierFrogTo(target) {
+      const frog = state.roster.find(f => f.id === state.inspectingFrogId);
+      if (!frog) return;
+      closeDossierModal();
+
+      if (target === "breed") {
+        switchTab("breeding");
+        if (frog.sex === "M") state.selectedSireId = frog.id;
+        else state.selectedDamId = frog.id;
+        updateBreedingSlots();
+        calculateMonteCarloOdds();
+      } else if (target === "arena") {
+        switchTab("colosseum");
+        state.selectedArenaFighterId = frog.id;
+        updateArenaFighterOptions();
+      } else if (target === "auction") {
+        switchTab("auction");
+        consignFrogToLane(frog.id);
+      }
+    }
+
+    /* =========================================================================
+       6. SYSTEM 2: 5-SLOT BREEDING LAIR & LIVE PUNNETT ODDS
+       ========================================================================= */
+    function updateBreedingSlots() {
+      const sire = state.roster.find(f => f.id === state.selectedSireId);
+      const dam = state.roster.find(f => f.id === state.selectedDamId);
+
+      const sireSlot = document.getElementById("sire-slot");
+      const damSlot = document.getElementById("dam-slot");
+      const btnBreed = document.getElementById("btn-start-breed");
+
+      if (sire) {
+        sireSlot.classList.add("assigned");
+        document.getElementById("sire-name").textContent = sire.name;
+        document.getElementById("sire-desc").textContent = `T${sire.tier} | ◈${sire.valuation.toLocaleString()}`;
+      } else {
+        sireSlot.classList.remove("assigned");
+        document.getElementById("sire-name").textContent = "Select Sire (Male)";
+        document.getElementById("sire-desc").textContent = "Tap to assign breeder";
+      }
+
+      if (dam) {
+        damSlot.classList.add("assigned");
+        document.getElementById("dam-name").textContent = dam.name;
+        document.getElementById("dam-desc").textContent = `T${dam.tier} | ◈${dam.valuation.toLocaleString()}`;
+      } else {
+        damSlot.classList.remove("assigned");
+        document.getElementById("dam-name").textContent = "Select Dam (Female)";
+        document.getElementById("dam-desc").textContent = "Tap to assign breeder";
+      }
+
+      btnBreed.disabled = !(sire && dam) || (state.clutches.length >= 5);
+      renderClutches();
+    }
+
+    function openParentPicker(sex) {
+      sound.playClick();
+      state.parentPickerMode = sex;
+      const title = document.getElementById("parent-picker-title");
+      title.textContent = sex === "M" ? "Select Sire (♂ Male)" : "Select Dam (♀ Female)";
+
+      const grid = document.getElementById("parent-picker-grid");
+      grid.innerHTML = "";
+
+      const candidates = state.roster.filter(f => f.sex === sex);
+      if (candidates.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; color:var(--text-dim);">No eligible ${sex === 'M' ? 'males' : 'females'} in vault.</div>`;
+      } else {
+        candidates.forEach(f => {
+          const item = document.createElement("div");
+          item.className = "frog-card";
+          item.onclick = () => {
+            if (sex === "M") state.selectedSireId = f.id;
+            else state.selectedDamId = f.id;
+            closeParentPicker();
+            updateBreedingSlots();
+            calculateMonteCarloOdds();
+          };
+          item.innerHTML = `
+            <div style="font-weight:700; color:#fff;">${f.name}</div>
+            <div style="font-size:11px; color:var(--cyan-bright); font-family:var(--font-mono);">Tier ${f.tier} | Val: ◈${f.valuation.toLocaleString()}</div>
+          `;
+          grid.appendChild(item);
+        });
+      }
+
+      document.getElementById("parent-picker-modal").classList.add("open");
+    }
+
+    function closeParentPicker() {
+      document.getElementById("parent-picker-modal").classList.remove("open");
+      state.parentPickerMode = null;
+    }
+
+    /* 1,000 Trial Live Monte Carlo Simulation */
+    function calculateMonteCarloOdds() {
+      const sire = state.roster.find(f => f.id === state.selectedSireId);
+      const dam = state.roster.find(f => f.id === state.selectedDamId);
+      const output = document.getElementById("punnett-output");
+
+      if (!sire || !dam) {
+        output.innerHTML = "Select both a Sire and Dam above to calculate live odds.";
+        return;
+      }
+
+      const TRIALS = 1000;
+      const tierCounts = {};
+      const visualCounts = [0, 0, 0, 0, 0, 0];
+      const hetCounts = [0, 0, 0, 0, 0, 0];
+      const superCodomCounts = [0, 0, 0, 0];
+      let grailCount = 0;
+
+      for (let i = 0; i < TRIALS; i++) {
+        // Offspring Tier simulation
+        const baseAvg = (sire.tier + dam.tier) / 2;
+        const jumpRoll = Math.random();
+        let offTier = Math.round(baseAvg);
+        if (jumpRoll < 0.18) offTier = Math.min(10, offTier + 1);
+        else if (jumpRoll > 0.88) offTier = Math.max(1, offTier - 1);
+        tierCounts[offTier] = (tierCounts[offTier] || 0) + 1;
+
+        // Recessives
+        const offRec = [0, 0, 0, 0, 0, 0];
+        for (let r = 0; r < 6; r++) {
+          const sAllele = (sire.recessives[r] === 2) ? 1 : (sire.recessives[r] === 1 ? (Math.random() < 0.5 ? 1 : 0) : 0);
+          const dAllele = (dam.recessives[r] === 2) ? 1 : (dam.recessives[r] === 1 ? (Math.random() < 0.5 ? 1 : 0) : 0);
+          const totalAllele = sAllele + dAllele;
+          offRec[r] = totalAllele;
+          if (totalAllele === 2) visualCounts[r]++;
+          else if (totalAllele === 1) hetCounts[r]++;
+        }
+
+        // Codominants
+        const offCodom = [0, 0, 0, 0];
+        for (let c = 0; c < 4; c++) {
+          const sAllele = (sire.codominants[c] === 2) ? 1 : (sire.codominants[c] === 1 ? (Math.random() < 0.5 ? 1 : 0) : 0);
+          const dAllele = (dam.codominants[c] === 2) ? 1 : (dam.codominants[c] === 1 ? (Math.random() < 0.5 ? 1 : 0) : 0);
+          const totalCodom = sAllele + dAllele;
+          offCodom[c] = totalCodom;
+          if (totalCodom === 2) superCodomCounts[c]++;
+        }
+
+        // Check Grail
+        const dummyFrog = { codominants: offCodom, recessives: offRec };
+        if (GRAILS.some(g => g.check(dummyFrog))) grailCount++;
+      }
+
+      // Format output table
+      let html = `<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">`;
+
+      // Tier Odds
+      html += `<div><strong style="color:#fff;">Predicted Tier Distribution:</strong><br>`;
+      Object.keys(tierCounts).sort((a,b)=>a-b).forEach(t => {
+        const pct = ((tierCounts[t] / TRIALS) * 100).toFixed(1);
+        html += `<div class="odds-row"><span>Tier ${t} (${TIERS[t-1].name.split(" ")[0]}):</span><span style="color:var(--cyan-bright);">${pct}%</span></div>`;
+      });
+      html += `</div>`;
+
+      // Visual Morphs
+      html += `<div><strong style="color:#fff;">Visual Recessive Morphs:</strong><br>`;
+      visualCounts.forEach((cnt, idx) => {
+        const pct = ((cnt / TRIALS) * 100).toFixed(1);
+        const hetPct = ((hetCounts[idx] / TRIALS) * 100).toFixed(1);
+        html += `<div class="odds-row"><span>${RECESSIVES[idx].name}:</span><span><strong style="color:var(--gold-tox);">${pct}% Visual</strong> <span style="color:var(--text-dim);">(${hetPct}% Het)</span></span></div>`;
+      });
+      html += `</div>`;
+
+      // Codominants & Grails
+      html += `<div><strong style="color:#fff;">Super Traits & Grails:</strong><br>`;
+      superCodomCounts.forEach((cnt, idx) => {
+        const pct = ((cnt / TRIALS) * 100).toFixed(1);
+        html += `<div class="odds-row"><span>${CODOMINANTS[idx].superName.split(" ")[1]}:</span><span style="color:#e879f9;">${pct}%</span></div>`;
+      });
+      const grailPct = ((grailCount / TRIALS) * 100).toFixed(1);
+      html += `<div class="odds-row" style="margin-top:6px; border-top:1px solid var(--border-accent);"><span style="color:var(--gold-tox); font-weight:700;">🌟 Grail Jackpot:</span><span style="color:var(--gold-tox); font-weight:700;">${grailPct}%</span></div>`;
+      html += `</div></div>`;
+
+      output.innerHTML = html;
+    }
+
+    function autoPairSynergy() {
+      sound.playClick();
+      const males = state.roster.filter(f => f.sex === "M");
+      const females = state.roster.filter(f => f.sex === "F");
+
+      if (males.length === 0 || females.length === 0) {
+        showToast("⚠️ Need at least one male and one female in vault!");
+        return;
+      }
+
+      // Best synergy evaluator: highest combined tier + complementary morphs
+      let bestSire = males[0];
+      let bestDam = females[0];
+      let bestScore = -1;
+
+      males.forEach(m => {
+        females.forEach(f => {
+          let score = (m.tier + f.tier) * 10;
+          // Add bonus if they can produce visual morphs or Grails
+          for (let i = 0; i < 6; i++) {
+            if ((m.recessives[i] > 0) && (f.recessives[i] > 0)) score += 25;
+          }
+          for (let j = 0; j < 4; j++) {
+            if ((m.codominants[j] > 0) && (f.codominants[j] > 0)) score += 20;
+          }
+          if (score > bestScore) {
+            bestScore = score;
+            bestSire = m;
+            bestDam = f;
+          }
+        });
+      });
+
+      state.selectedSireId = bestSire.id;
+      state.selectedDamId = bestDam.id;
+      updateBreedingSlots();
+      calculateMonteCarloOdds();
+      showToast(`Auto-paired ${bestSire.name} & ${bestDam.name}!`);
+    }
+
+    function initiateClutch() {
+      if (state.credits < 200) {
+        showToast("⚠️ Insufficient credits (Requires ◈200)");
+        return;
+      }
+      if (state.clutches.length >= 5) {
+        showToast("⚠️ Nursery at max capacity (5/5 Clutches)");
+        return;
+      }
+
+      const sire = state.roster.find(f => f.id === state.selectedSireId);
+      const dam = state.roster.find(f => f.id === state.selectedDamId);
+      if (!sire || !dam) return;
+
+      state.credits -= 200;
+      sound.playRibbit();
+
+      // Create offspring embryo in advance
+      const baseAvg = (sire.tier + dam.tier) / 2;
+      const jumpRoll = Math.random();
+      let offTier = Math.round(baseAvg);
+      if (jumpRoll < 0.18) offTier = Math.min(10, offTier + 1);
+      else if (jumpRoll > 0.88) offTier = Math.max(1, offTier - 1);
+
+      const offRec = [0, 0, 0, 0, 0, 0];
+      for (let r = 0; r < 6; r++) {
+        const sAllele = (sire.recessives[r] === 2) ? 1 : (sire.recessives[r] === 1 ? (Math.random() < 0.5 ? 1 : 0) : 0);
+        const dAllele = (dam.recessives[r] === 2) ? 1 : (dam.recessives[r] === 1 ? (Math.random() < 0.5 ? 1 : 0) : 0);
+        offRec[r] = sAllele + dAllele;
+      }
+
+      const offCodom = [0, 0, 0, 0];
+      for (let c = 0; c < 4; c++) {
+        const sAllele = (sire.codominants[c] === 2) ? 1 : (sire.codominants[c] === 1 ? (Math.random() < 0.5 ? 1 : 0) : 0);
+        const dAllele = (dam.codominants[c] === 2) ? 1 : (dam.codominants[c] === 1 ? (Math.random() < 0.5 ? 1 : 0) : 0);
+        offCodom[c] = sAllele + dAllele;
+      }
+
+      // Inherit and drift IVs
+      const offIVs = {};
+      ["potency", "agility", "armor", "vitality", "shock"].forEach(stat => {
+        const inheritFromSire = Math.random() < 0.5;
+        const parentVal = inheritFromSire ? sire.ivs[stat] : dam.ivs[stat];
+        const drift = Math.floor((Math.random() * 14) - 5);
+        offIVs[stat] = Math.max(1, Math.min(100, parentVal + drift));
+      });
+
+      const embryoFrog = createFrog(offTier, null, {
+        recessives: offRec,
+        codominants: offCodom,
+        ivs: offIVs,
+        originTag: `Bred: ${sire.name} x ${dam.name}`
+      });
+
+      state.clutches.push({
+        id: generateId(),
+        sireName: sire.name,
+        damName: dam.name,
+        daysAged: 0,
+        targetDays: 4,
+        candled: false,
+        embryo: embryoFrog
+      });
+
+      saveState();
+      updateBreedingSlots();
+      showToast("🥚 New Clutch fertilized in Nursery slot!");
+    }
+
+    function renderClutches() {
+      const grid = document.getElementById("clutches-grid");
+      grid.innerHTML = "";
+      document.getElementById("badge-clutches").textContent = `${state.clutches.length}/5`;
+
+      for (let i = 0; i < 5; i++) {
+        const clutch = state.clutches[i];
+        if (clutch) {
+          const card = document.createElement("div");
+          card.className = "clutch-card";
+
+          const stageNames = ["Fresh Egg", "Embryo", "Tadpole (Candle)", "Froglet", "Adult (Ready!)"];
+          const currentStage = stageNames[Math.min(4, clutch.daysAged)];
+          const isReady = clutch.daysAged >= 4;
+          const canCandle = clutch.daysAged >= 2 && !clutch.candled;
+
+          card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:700; color:var(--cyan-bright); font-size:12px;">Slot ${i+1}: ${currentStage}</span>
+              <span style="font-family:var(--font-mono); font-size:11px; color:var(--gold-tox);">${clutch.daysAged}/4 Days</span>
+            </div>
+            <div style="font-size:11px; color:var(--text-muted);">
+              Lineage: <strong>${clutch.sireName}</strong> × <strong>${clutch.damName}</strong>
+            </div>
+            <div class="hud-bar"><div class="hud-fill-hp" style="width:${(clutch.daysAged/4)*100}%;"></div></div>
+            <div style="margin-top:auto; display:flex; gap:6px; flex-wrap:wrap;">
+              ${canCandle ? `<button class="btn btn-sm" onclick="openCandlingModal(${i})">🔬 Candle</button>` : ''}
+              ${isReady ? `<button class="btn btn-sm btn-primary" onclick="claimHatchedFrog(${i})">🐣 Claim Froglet</button>` : `<button class="btn btn-sm" onclick="speedupClutch(${i})">⚡ Glaze Speed (1 🍯)</button>`}
+            </div>
+          `;
+          grid.appendChild(card);
+        } else {
+          const emptySlot = document.createElement("div");
+          emptySlot.className = "clutch-card empty";
+          emptySlot.innerHTML = `<span>Slot ${i+1}: Ready for Clutch</span>`;
+          grid.appendChild(emptySlot);
+        }
+      }
+    }
+
+    function openCandlingModal(index) {
+      sound.playClick();
+      state.candlingClutchIndex = index;
+      const clutch = state.clutches[index];
+      if (!clutch) return;
+
+      clutch.candled = true;
+      const cvs = document.getElementById("candling-canvas");
+      const ctx = cvs.getContext("2d");
+      ctx.clearRect(0, 0, 160, 160);
+
+      // Glowing embryonic egg render
+      ctx.fillStyle = "#0c1810";
+      ctx.fillRect(0, 0, 160, 160);
+      ctx.save();
+      ctx.shadowBlur = 25;
+      ctx.shadowColor = "#00f2a6";
+      ctx.strokeStyle = "#00f2a6";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(80, 80, 50, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Translucent yolk & mini fetus
+      ctx.fillStyle = "rgba(0, 242, 166, 0.25)";
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#facc15";
+      ctx.beginPath();
+      ctx.arc(75, 75, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      const emb = clutch.embryo;
+      const tierDef = TIERS.find(t => t.id === emb.tier);
+      const dataDiv = document.getElementById("candling-data");
+      dataDiv.innerHTML = `
+        <div>🧬 Projected Tier: <strong style="color:var(--cyan-bright);">${emb.tier} (${tierDef.name})</strong></div>
+        <div>⚧ Sex: <strong>${emb.sex === 'M' ? '♂ Male' : '♀ Female'}</strong></div>
+        <div>📊 Projected IV Total: <strong>${Object.values(emb.ivs).reduce((a,b)=>a+b,0)}/500</strong></div>
+        <div>✨ Visual Morphs: <strong>${emb.recessives.filter(r=>r===2).length} confirmed</strong></div>
+      `;
+
+      document.getElementById("candling-modal").classList.add("open");
+      saveState();
+      renderClutches();
+    }
+
+    function closeCandlingModal() {
+      document.getElementById("candling-modal").classList.remove("open");
+      state.candlingClutchIndex = null;
+    }
+
+    function cullCurrentClutch() {
+      if (state.candlingClutchIndex === null) return;
+      state.clutches.splice(state.candlingClutchIndex, 1);
+      state.credits += 100; // 50% of 200 fee refunded
+      sound.playHit();
+      closeCandlingModal();
+      saveState();
+      updateBreedingSlots();
+      showToast("✂️ Clutch culled. ◈100 refund deposited.");
+    }
+
+    function speedupClutch(index) {
+      if (state.glaze < 1) {
+        showToast("⚠️ Requires 1 Bromeliad Glaze (🍯) to accelerate maturation!");
+        return;
+      }
+      state.glaze -= 1;
+      state.clutches[index].daysAged = 4;
+      sound.playCoin();
+      saveState();
+      renderClutches();
+      showToast("🍯 Bromeliad Glaze accelerated clutch to adulthood!");
+    }
+
+    function claimHatchedFrog(index) {
+      const clutch = state.clutches[index];
+      if (!clutch || clutch.daysAged < 4) return;
+
+      const newFrog = clutch.embryo;
+      state.roster.push(newFrog);
+      state.clutches.splice(index, 1);
+
+      // Check if this newly claimed frog is a World's First Grail
+      if (newFrog.isGrail && !state.codex.some(c => c.grailId === newFrog.grailId)) {
+        triggerGrailDiscoveryModal(newFrog);
+      } else {
+        sound.playFanfare();
+        showToast(`🎉 Hatched ${newFrog.name}! Added to Roster Vault.`);
+      }
+
+      saveState();
+      updateBreedingSlots();
+      renderVault();
+    }
+
+    /* =========================================================================
+       7. SYSTEM 3: 2D MICRO-ARENA COLOSSEUM
+       ========================================================================= */
+    let battleAnimationId = null;
+    let battleActive = false;
+    let battleData = {
+      player: null,
+      enemy: null,
+      playerHP: 100,
+      playerMaxHP: 100,
+      playerStam: 100,
+      enemyHP: 100,
+      enemyMaxHP: 100,
+      enemyStam: 100,
+      pX: 120,
+      eX: 480,
+      y: 110,
+      particles: [],
+      floatTexts: []
+    };
+
+    function updateArenaLeague() {
+      state.arenaLeague = parseInt(document.getElementById("arena-league").value);
+    }
+
+    function setStance(stance) {
+      sound.playClick();
+      state.arenaStance = stance;
+      document.getElementById("stance-aggro").classList.toggle("active", stance === "Aggressive");
+      document.getElementById("stance-def").classList.toggle("active", stance === "Defensive");
+      document.getElementById("stance-tox").classList.toggle("active", stance === "VenomKite");
+      showToast(`Tactical Stance: ${stance}`);
+    }
+
+    function toggleBattleSpeed() {
+      sound.playClick();
+      state.arenaSpeed = (state.arenaSpeed === 1) ? 3 : 1;
+      document.getElementById("btn-arena-speed").textContent = `Speed: ${state.arenaSpeed}x`;
+    }
+
+    function updateArenaFighterOptions() {
+      const select = document.getElementById("arena-fighter-select");
+      select.innerHTML = "";
+      state.roster.forEach(f => {
+        const opt = document.createElement("option");
+        opt.value = f.id;
+        opt.textContent = `${f.name} (T${f.tier})`;
+        if (f.id === state.selectedArenaFighterId) opt.selected = true;
+        select.appendChild(opt);
+      });
+      if (!state.selectedArenaFighterId && state.roster.length > 0) {
+        state.selectedArenaFighterId = state.roster[0].id;
+      }
+    }
+
+    function selectArenaFighter() {
+      state.selectedArenaFighterId = document.getElementById("arena-fighter-select").value;
+    }
+
+    function startArenaDuel() {
+      if (battleActive) return;
+      const playerFrog = state.roster.find(f => f.id === state.selectedArenaFighterId);
+      if (!playerFrog) {
+        showToast("⚠️ Select a fighter from your roster!");
+        return;
+      }
+
+      sound.init();
+      sound.playRibbit();
+
+      // Generate League Challenger
+      const leagueEnemyTier = Math.min(10, state.arenaLeague + 1);
+      const enemyFrog = createFrog(leagueEnemyTier, null, {
+        name: `Rival Challenger T${leagueEnemyTier}`
+      });
+
+      // Calculate Combat Stats
+      const calcHP = f => Math.floor(80 + (f.ivs.vitality * 1.5) + (f.ivs.armor * 0.8) + (f.tier * 20));
+      battleData.player = playerFrog;
+      battleData.enemy = enemyFrog;
+      battleData.playerMaxHP = calcHP(playerFrog);
+      battleData.playerHP = battleData.playerMaxHP;
+      battleData.playerStam = 100;
+
+      battleData.enemyMaxHP = calcHP(enemyFrog);
+      battleData.enemyHP = battleData.enemyMaxHP;
+      battleData.enemyStam = 100;
+
+      battleData.pX = 120;
+      battleData.eX = 480;
+      battleData.particles = [];
+      battleData.floatTexts = [];
+
+      document.getElementById("player-fighter-name").textContent = playerFrog.name;
+      document.getElementById("enemy-fighter-name").textContent = enemyFrog.name;
+      document.getElementById("battle-state-text").textContent = "DUELING...";
+      document.getElementById("btn-arena-fight").disabled = true;
+
+      battleActive = true;
+      runArenaLoop();
+    }
+
+    function runArenaLoop() {
+      if (!battleActive) return;
+
+      const canvas = document.getElementById("colosseum-canvas");
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // Update simulation cycles based on speed
+      const cycles = state.arenaSpeed;
+      for (let c = 0; c < cycles; c++) {
+        updateBattlePhysics();
+        if (!battleActive) break;
+      }
+
+      // Render Scene
+      ctx.clearRect(0, 0, w, h);
+
+      // Arena Floor & Vines
+      ctx.fillStyle = "#12241b";
+      ctx.fillRect(0, h - 22, w, 22);
+      ctx.strokeStyle = "#00f2a622";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < w; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, h - 22);
+        ctx.lineTo(x + 20, h);
+        ctx.stroke();
+      }
+
+      // Draw Combatants
+      drawFrogToCanvas(canvas, battleData.player, { scale: 0.85, flip: false });
+      // Temporary draw at coordinates:
+      ctx.save();
+      ctx.translate(battleData.pX, battleData.y);
+      drawFrogAt(ctx, battleData.player, 0.8, false);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(battleData.eX, battleData.y);
+      drawFrogAt(ctx, battleData.enemy, 0.8, true);
+      ctx.restore();
+
+      // Render Floating Text
+      battleData.floatTexts.forEach((ft, idx) => {
+        ctx.fillStyle = ft.color;
+        ctx.font = "bold 13px " + getComputedStyle(document.body).getPropertyValue('--font-mono');
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ft.y -= 0.6;
+        ft.alpha -= 0.02;
+        if (ft.alpha <= 0) battleData.floatTexts.splice(idx, 1);
+      });
+
+      // Update HUD Telemetry
+      document.getElementById("player-hp-num").textContent = `${Math.max(0, Math.round(battleData.playerHP))}/${battleData.playerMaxHP}`;
+      document.getElementById("player-hp-bar").style.width = `${Math.max(0, (battleData.playerHP / battleData.playerMaxHP) * 100)}%`;
+      document.getElementById("player-stam-bar").style.width = `${Math.max(0, battleData.playerStam)}%`;
+
+      document.getElementById("enemy-hp-num").textContent = `${Math.max(0, Math.round(battleData.enemyHP))}/${battleData.enemyMaxHP}`;
+      document.getElementById("enemy-hp-bar").style.width = `${Math.max(0, (battleData.enemyHP / battleData.enemyMaxHP) * 100)}%`;
+      document.getElementById("enemy-stam-bar").style.width = `${Math.max(0, battleData.enemyStam)}%`;
+
+      if (battleActive) {
+        battleAnimationId = requestAnimationFrame(runArenaLoop);
+      }
+    }
+
+    function drawFrogAt(ctx, frog, scale, flip) {
+      ctx.save();
+      if (flip) ctx.scale(-1, 1);
+      const tierDef = TIERS.find(t => t.id === frog.tier) || TIERS[0];
+      ctx.fillStyle = tierDef.color;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 20 * scale, 16 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Eyes
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.arc(8 * scale, -10 * scale, 5 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#facc15";
+      ctx.beginPath();
+      ctx.arc(8 * scale, -10 * scale, 2 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function updateBattlePhysics() {
+      // Regenerate stamina
+      battleData.playerStam = Math.min(100, battleData.playerStam + 0.4);
+      battleData.enemyStam = Math.min(100, battleData.enemyStam + 0.4);
+
+      // Attack roll timer
+      if (Math.random() < 0.05) {
+        // Player Action
+        executeAttack("player");
+      }
+      if (Math.random() < 0.05) {
+        // Enemy Action
+        executeAttack("enemy");
+      }
+
+      // Check KO
+      if (battleData.playerHP <= 0 || battleData.enemyHP <= 0) {
+        resolveDuelOutcome();
+      }
+    }
+
+    function executeAttack(attacker) {
+      const isPlayer = attacker === "player";
+      const atkFrog = isPlayer ? battleData.player : battleData.enemy;
+      const defFrog = isPlayer ? battleData.enemy : battleData.player;
+
+      // Base Damage derived from Tox-Potency + Bio-Shock
+      let rawDmg = 8 + (atkFrog.ivs.potency * 0.22) + (atkFrog.ivs.shock * 0.18);
+
+      // Stance modifiers
+      if (isPlayer) {
+        if (state.arenaStance === "Aggressive") rawDmg *= 1.25;
+        else if (state.arenaStance === "VenomKite") rawDmg *= 0.9;
+      }
+
+      // Defense deduction
+      const defense = defFrog.ivs.armor * 0.15;
+      let finalDmg = Math.max(3, Math.round(rawDmg - defense));
+
+      // Crit or Parry roll
+      let isCrit = Math.random() < (atkFrog.ivs.agility * 0.003);
+      let isParry = Math.random() < (defFrog.ivs.agility * 0.0025);
+
+      if (isPlayer && state.arenaStance === "Defensive") isParry = Math.random() < 0.35;
+
+      if (isParry) {
+        finalDmg = Math.floor(finalDmg * 0.2);
+        battleData.floatTexts.push({
+          text: "PARRIED!",
+          color: "#38bdf8",
+          x: isPlayer ? battleData.eX : battleData.pX,
+          y: battleData.y - 20,
+          alpha: 1.0
+        });
+      } else if (isCrit) {
+        finalDmg = Math.round(finalDmg * 1.8);
+        sound.playCrit();
+        battleData.floatTexts.push({
+          text: `CRIT! -${finalDmg}`,
+          color: "#facc15",
+          x: isPlayer ? battleData.eX : battleData.pX,
+          y: battleData.y - 20,
+          alpha: 1.0
+        });
+      } else {
+        sound.playHit();
+        battleData.floatTexts.push({
+          text: `-${finalDmg}`,
+          color: isPlayer ? "#00f2a6" : "#ff3366",
+          x: isPlayer ? battleData.eX : battleData.pX,
+          y: battleData.y - 15,
+          alpha: 1.0
+        });
+      }
+
+      if (isPlayer) {
+        battleData.enemyHP -= finalDmg;
+      } else {
+        if (!state.godMode) battleData.playerHP -= finalDmg;
+      }
+    }
+
+    function instantResolveBattle() {
+      if (!battleActive) return;
+      while (battleData.playerHP > 0 && battleData.enemyHP > 0) {
+        executeAttack("player");
+        if (battleData.enemyHP <= 0) break;
+        executeAttack("enemy");
+      }
+      resolveDuelOutcome();
+    }
+
+    function resolveDuelOutcome() {
+      battleActive = false;
+      cancelAnimationFrame(battleAnimationId);
+      document.getElementById("btn-arena-fight").disabled = false;
+
+      const playerWon = battleData.playerHP > 0;
+      const purseValues = [0, 250, 650, 1500, 3800, 12000];
+      const purse = purseValues[state.arenaLeague] || 250;
+
+      if (playerWon) {
+        sound.playFanfare();
+        state.credits += purse;
+        battleData.player.wins = (battleData.player.wins || 0) + 1;
+        battleData.player.battles = (battleData.player.battles || 0) + 1;
+        document.getElementById("battle-state-text").textContent = "VICTORY!";
+        showToast(`🏆 VICTORY! Earned ◈${purse.toLocaleString()} Credits`);
+      } else {
+        sound.playHit();
+        battleData.player.battles = (battleData.player.battles || 0) + 1;
+        document.getElementById("battle-state-text").textContent = "DEFEAT";
+        showToast("💀 Defeat in the Colosseum. Refortify with Poultice!");
+      }
+
+      saveState();
+      renderVault();
+    }
+
+    /* =========================================================================
+       8. SYSTEM 4: 5-LANE PLAYER CONSIGNMENT AUCTION HOUSE
+       ========================================================================= */
+    function renderAuctionLanes() {
+      const container = document.getElementById("auction-lanes");
+      container.innerHTML = "";
+
+      for (let i = 0; i < 5; i++) {
+        const lane = state.auctionLanes[i];
+        const laneDiv = document.createElement("div");
+        laneDiv.className = `auction-lane ${lane ? "active-bid" : ""}`;
+
+        if (lane) {
+          laneDiv.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:700; color:var(--cyan-bright); font-size:12px;">Lane ${i+1}</span>
+              <span class="timer-badge" id="lane-timer-${i}">${lane.timeLeft.toFixed(1)}s</span>
+            </div>
+            <div style="font-weight:700; color:#fff; font-size:14px;">${lane.frog.name}</div>
+            <div style="font-size:11px; color:var(--text-muted);">Tier ${lane.frog.tier} | Valuation: ◈${lane.frog.valuation.toLocaleString()}</div>
+            <div style="background:#08100c; padding:8px; border-radius:6px; margin:4px 0;">
+              <div style="font-size:10px; color:var(--text-dim);">HIGH BIDDER (${lane.highBidder}):</div>
+              <div style="font-size:16px; font-weight:800; color:var(--gold-tox);">◈${lane.currentBid.toLocaleString()}</div>
+            </div>
+            <div style="margin-top:auto; display:flex; gap:6px;">
+              <button class="btn btn-sm btn-gold" style="width:100%;" onclick="applyPresentationPolish(${i})" ${lane.polished ? "disabled" : ""}>
+                ${lane.polished ? "✨ Polished (+66%)" : "🍯 Polish (1 Glaze)"}
+              </button>
+            </div>
+          `;
+        } else {
+          laneDiv.innerHTML = `
+            <div style="text-align:center; padding:30px 10px; color:var(--text-dim);">
+              <div style="font-size:18px; margin-bottom:6px;">🏛️</div>
+              <div>Lane ${i+1}: Open Consignment</div>
+              <button class="btn btn-sm btn-primary" style="margin-top:10px;" onclick="openConsignModal(${i})">+ Consign</button>
+            </div>
+          `;
+        }
+        container.appendChild(laneDiv);
+      }
+    }
+
+    function openConsignModal(laneIndex = null) {
+      sound.playClick();
+      state.consignTargetLane = laneIndex;
+      const grid = document.getElementById("consign-picker-grid");
+      grid.innerHTML = "";
+
+      if (state.roster.length <= 1) {
+        showToast("⚠️ Must maintain at least 1 frog in vivarium!");
+        return;
+      }
+
+      state.roster.forEach(f => {
+        const item = document.createElement("div");
+        item.className = "frog-card";
+        item.onclick = () => consignFrogToLane(f.id, laneIndex);
+        item.innerHTML = `
+          <div style="font-weight:700; color:#fff;">${f.name}</div>
+          <div style="font-size:11px; color:var(--gold-tox); font-family:var(--font-mono);">Valuation: ◈${f.valuation.toLocaleString()}</div>
+        `;
+        grid.appendChild(item);
+      });
+
+      document.getElementById("consign-modal").classList.add("open");
+    }
+
+    function closeConsignModal() {
+      document.getElementById("consign-modal").classList.remove("open");
+    }
+
+    function consignFrogToLane(frogId, laneIndex = null) {
+      const frogIdx = state.roster.findIndex(f => f.id === frogId);
+      if (frogIdx === -1) return;
+      const frog = state.roster[frogIdx];
+
+      let targetLane = laneIndex;
+      if (targetLane === null) {
+        targetLane = state.auctionLanes.findIndex(l => l === null);
+      }
+      if (targetLane === -1 || targetLane > 4) {
+        showToast("⚠️ All 5 Consignment lanes are currently occupied!");
+        return;
+      }
+
+      state.roster.splice(frogIdx, 1);
+      const startingBid = Math.floor(frog.valuation * 0.7);
+
+      state.auctionLanes[targetLane] = {
+        frog: frog,
+        currentBid: startingBid,
+        highBidder: "Reserve Floor",
+        timeLeft: 18.0,
+        polished: false
+      };
+
+      closeConsignModal();
+      sound.playCoin();
+      saveState();
+      renderVault();
+      renderAuctionLanes();
+      showToast(`Consigned ${frog.name} to Lane ${targetLane + 1}!`);
+    }
+
+    function applyPresentationPolish(laneIndex) {
+      const lane = state.auctionLanes[laneIndex];
+      if (!lane || lane.polished) return;
+      if (state.glaze < 1) {
+        showToast("⚠️ Requires 1 Bromeliad Nectar Glaze (🍯)!");
+        return;
+      }
+      state.glaze -= 1;
+      lane.polished = true;
+      lane.currentBid = Math.floor(lane.currentBid * 1.66);
+      sound.playFanfare();
+      saveState();
+      renderAuctionLanes();
+      showToast("🍯 Presentation Polish applied! Bids boosted +66%");
+    }
+
+    /* Live Auction Ticker (100ms interval) */
+    setInterval(() => {
+      let updated = false;
+      state.auctionLanes.forEach((lane, idx) => {
+        if (!lane) return;
+        lane.timeLeft -= 0.1;
+        updated = true;
+
+        // Dynamic syndicate bidding
+        if (Math.random() < 0.08 && lane.timeLeft > 0.5) {
+          const syndicate = SYNDICATES[Math.floor(Math.random() * SYNDICATES.length)];
+          const increment = Math.floor(lane.frog.valuation * (0.08 + Math.random() * 0.14));
+          lane.currentBid += increment;
+          lane.highBidder = syndicate.name;
+
+          // Anti-Snipe feature (+1.5s if bid in last 1.0s)
+          if (lane.timeLeft < 1.0) {
+            lane.timeLeft += 1.5;
+            sound.playCrit();
+          } else {
+            sound.playClick();
+          }
+        }
+
+        // Hammer Strike / Finalize
+        if (lane.timeLeft <= 0) {
+          const finalPayout = Math.floor(lane.currentBid * 0.97); // 3% broker fee
+          state.credits += finalPayout;
+          sound.playGavel();
+          showToast(`🔨 GAVEL STRIKE: Sold ${lane.frog.name} for ◈${finalPayout.toLocaleString()} (3% Fee Deducted)`);
+          state.auctionLanes[idx] = null;
+          saveState();
+          renderVault();
+          renderAuctionLanes();
+        } else {
+          const badge = document.getElementById(`lane-timer-${idx}`);
+          if (badge) badge.textContent = `${lane.timeLeft.toFixed(1)}s`;
+        }
+      });
+      if (updated && Math.random() < 0.1) renderAuctionLanes();
+    }, 100);
+
+    /* =========================================================================
+       9. SYSTEM 5: 10-SECOND DISTRESSED CLEARANCE TAB
+       ========================================================================= */
+    let clearanceTimer = 10.0;
+
+    function generateClearanceLots() {
+      state.clearanceLots = [];
+      for (let i = 0; i < 4; i++) {
+        const randTier = Math.floor(1 + Math.random() * 7); // Tiers 1-7
+        const frog = createFrog(randTier);
+        const discountPct = Math.floor(70 + Math.random() * 29); // 70% to 99%
+        const salePrice = Math.max(25, Math.floor(frog.valuation * ((100 - discountPct) / 100)));
+        state.clearanceLots.push({
+          frog: frog,
+          discount: discountPct,
+          price: salePrice
+        });
+      }
+    }
+
+    function renderClearanceLots() {
+      const grid = document.getElementById("clearance-grid");
+      if (!grid) return;
+      grid.innerHTML = "";
+
+      state.clearanceLots.forEach((lot, idx) => {
+        const f = lot.frog;
+        const tierDef = TIERS.find(t => t.id === f.tier);
+        const card = document.createElement("div");
+        card.className = "frog-card";
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="tag tag-grail" style="background:var(--carmine-bio); color:#fff;">-${lot.discount}% OFF</span>
+            <span style="font-family:var(--font-mono); font-size:11px; text-decoration:line-through; color:var(--text-dim);">◈${f.valuation.toLocaleString()}</span>
+          </div>
+          <div style="font-weight:700; color:#fff; font-size:14px; margin-top:4px;">${f.name}</div>
+          <div style="font-size:11px; color:var(--cyan-bright); font-family:var(--font-mono);">T${f.tier}: ${tierDef.name} (${f.sex === 'M' ? '♂' : '♀'})</div>
+          <div class="card-stat-bar" style="margin-top:auto;">
+            <span style="font-size:16px; font-weight:800; color:var(--gold-tox);">◈${lot.price.toLocaleString()}</span>
+            <button class="btn btn-sm btn-primary" onclick="buyClearanceLot(${idx})">Snag Lot</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function buyClearanceLot(index) {
+      const lot = state.clearanceLots[index];
+      if (!lot) return;
+      if (state.credits < lot.price) {
+        showToast("⚠️ Insufficient Credits!");
+        return;
+      }
+      state.credits -= lot.price;
+      state.roster.push(lot.frog);
+      state.clearanceLots.splice(index, 1);
+      sound.playCoin();
+      saveState();
+      renderVault();
+      renderClearanceLots();
+      showToast(`Snagged ${lot.frog.name} at ${lot.discount}% liquidation discount!`);
+    }
+
+    /* 10s Continuous Countdown */
+    setInterval(() => {
+      clearanceTimer -= 0.1;
+      if (clearanceTimer <= 0) {
+        clearanceTimer = 10.0;
+        generateClearanceLots();
+        renderClearanceLots();
+      }
+      const el = document.getElementById("clearance-clock");
+      if (el) el.textContent = `${clearanceTimer.toFixed(1)}s`;
+    }, 100);
+
+    /* =========================================================================
+       10. SYSTEM 6: GLOBAL MYSTERY TRADE (WONDER TRADE)
+       ========================================================================= */
+    let radarAngle = 0;
+    let radarInterval = null;
+
+    function updateWonderTradeSelect() {
+      const select = document.getElementById("wondertrade-select");
+      select.innerHTML = "";
+      state.roster.forEach(f => {
+        const opt = document.createElement("option");
+        opt.value = f.id;
+        opt.textContent = `${f.name} (T${f.tier} ${f.sex === 'M' ? '♂' : '♀'})`;
+        select.appendChild(opt);
+      });
+    }
+
+    function executeWonderTrade() {
+      if (state.roster.length <= 1) {
+        showToast("⚠️ Must keep at least 1 specimen in vivarium!");
+        return;
+      }
+      const select = document.getElementById("wondertrade-select");
+      const depositId = select.value;
+      const depositFrog = state.roster.find(f => f.id === depositId);
+      if (!depositFrog) return;
+
+      sound.playRibbit();
+      document.getElementById("btn-wondertrade").disabled = true;
+
+      // Start Radar Animation
+      const statusText = document.getElementById("radar-status");
+      statusText.textContent = "SYNCHRONIZING WITH INTERNATIONAL BIO-HUBS...";
+
+      const hubs = [
+        "Manaus Hub (Brazil) 3.1190° S",
+        "Tokyo Dendro-Lab (Japan) 35.6762° N",
+        "Zurich Herpetology (Switzerland) 47.3769° N",
+        "San Jose Vivarium (Costa Rica) 9.9281° N",
+        "Nairobi Bio-Reserve (Kenya) 1.2921° S"
+      ];
+
+      let step = 0;
+      const hubInterval = setInterval(() => {
+        statusText.textContent = `Pinging: ${hubs[step % hubs.length]}`;
+        sound.playClick();
+        step++;
+      }, 400);
+
+      // Finish Trade after 2.4s
+      setTimeout(() => {
+        clearInterval(hubInterval);
+        document.getElementById("btn-wondertrade").disabled = false;
+
+        // Remove deposited frog
+        state.roster = state.roster.filter(f => f.id !== depositId);
+
+        // 8% Jackpot roll
+        const isJackpot = Math.random() < 0.08;
+        let incomingTier = isJackpot ? Math.floor(8 + Math.random() * 3) : Math.floor(1 + Math.random() * 6);
+        const originHub = hubs[Math.floor(Math.random() * hubs.length)].split("(")[0].trim();
+
+        const incomingFrog = createFrog(incomingTier, null, {
+          name: `${originHub.split(" ")[0]} #${Math.floor(100 + Math.random() * 900)}`,
+          originTag: originHub
+        });
+
+        if (isJackpot) {
+          incomingFrog.name = `⚡ JACKPOT ${incomingFrog.name}`;
+          sound.playCrit();
+        } else {
+          sound.playCoin();
+        }
+
+        state.roster.push(incomingFrog);
+        statusText.textContent = `TRADE COMPLETE! Received ${incomingFrog.name}`;
+        saveState();
+        renderVault();
+        updateWonderTradeSelect();
+        showToast(`🌐 Received ${incomingFrog.name} (${incomingFrog.originTag})!`);
+      }, 2400);
+    }
+
+    function drawRadar() {
+      const cvs = document.getElementById("radar-canvas");
+      if (!cvs) return;
+      const ctx = cvs.getContext("2d");
+      const w = cvs.width;
+      const h = cvs.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = w / 2 - 4;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Radar circles
+      ctx.strokeStyle = "#00f2a644";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.arc(cx, cy, r * 0.66, 0, Math.PI * 2);
+      ctx.arc(cx, cy, r * 0.33, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Crosshairs
+      ctx.beginPath();
+      ctx.moveTo(cx, 0); ctx.lineTo(cx, h);
+      ctx.moveTo(0, cy); ctx.lineTo(w, cy);
+      ctx.stroke();
+
+      // Sweeping beam
+      radarAngle += 0.04;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(radarAngle);
+      const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+      grad.addColorStop(0, "rgba(0, 242, 166, 0.4)");
+      grad.addColorStop(1, "rgba(0, 242, 166, 0.0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, r, 0, Math.PI * 0.35);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      requestAnimationFrame(drawRadar);
+    }
+    requestAnimationFrame(drawRadar);
+
+    /* =========================================================================
+       11. SYSTEM 7: DAY TICK, CONDITIONING & LOGISTICS
+       ========================================================================= */
+    function advanceDay() {
+      sound.playClick();
+      state.day += 1;
+
+      // Feeding consumption (1 ration per frog)
+      const feedNeeded = state.roster.length;
+      if (state.rations >= feedNeeded) {
+        state.rations -= feedNeeded;
+      } else {
+        state.rations = 0;
+        showToast("⚠️ Starvation warning! Depleted rations dropped satiety.");
+      }
+
+      // Incubate clutches
+      state.clutches.forEach(c => c.daysAged += 1);
+
+      // Distressed inventory rolls fresh
+      generateClearanceLots();
+      renderClearanceLots();
+
+      saveState();
+      updateTopLedger();
+      renderClutches();
+      showToast(`📅 Advanced to Day ${state.day}. Clutches matured.`);
+    }
+
+    function buySupplies(type, qty, cost) {
+      if (state.credits < cost) {
+        showToast("⚠️ Insufficient Credits!");
+        return;
+      }
+      state.credits -= cost;
+      if (type === "rations") state.rations += qty;
+      else if (type === "poultice") state.poultice += qty;
+      else if (type === "glaze") state.glaze += qty;
+      sound.playCoin();
+      saveState();
+      updateTopLedger();
+      showToast(`Depot: Purchased +${qty} ${type}!`);
+    }
+
+    function runConditioning(action) {
+      if (state.roster.length === 0) return;
+      sound.playClick();
+
+      if (action === "mist") {
+        if (state.credits < 50) { showToast("⚠️ Requires ◈50!"); return; }
+        state.credits -= 50;
+        state.roster.forEach(f => f.energy = 100);
+        showToast("🌧️ Vivarium misted: 100% Energy restored to all frogs!");
+      } else if (action === "chitin") {
+        if (state.poultice < 10) { showToast("⚠️ Requires 10 Poultices (🧪)!"); return; }
+        state.poultice -= 10;
+        state.roster.forEach(f => {
+          f.isInjured = false;
+          f.ivs.armor = Math.min(100, f.ivs.armor + 1);
+        });
+        showToast("🛡️ Chitin Bath: Cured all injuries & +1 Chitin Armor IV!");
+      } else if (action === "reflex") {
+        if (state.rations < 20) { showToast("⚠️ Requires 20 Springtails (🦗)!"); return; }
+        state.rations -= 20;
+        state.roster.forEach(f => {
+          if (Math.random() < 0.5) f.ivs.agility = Math.min(100, f.ivs.agility + 1);
+          else f.ivs.potency = Math.min(100, f.ivs.potency + 1);
+        });
+        showToast("🎯 Reflex Drills complete: IV gains awarded!");
+      }
+
+      saveState();
+      updateTopLedger();
+      renderVault();
+    }
+
+    /* =========================================================================
+       12. SYSTEM 8: GOD MODE CONSOLE & PERSISTENCE BACKUPS
+       ========================================================================= */
+    function toggleDevDrawer() {
+      const drawer = document.getElementById("dev-drawer");
+      drawer.classList.toggle("open");
+    }
+
+    function devCheat(action) {
+      sound.playClick();
+      if (action === "cash50k") state.credits += 50000;
+      else if (action === "cash500k") state.credits += 500000;
+      else if (action === "broke") state.credits = 50;
+      else if (action === "rations") state.rations += 500;
+      else if (action === "medicine") state.poultice += 100;
+      else if (action === "glaze") state.glaze += 50;
+      else if (action === "matureClutches") state.clutches.forEach(c => c.daysAged = 4);
+      else if (action === "spawnTierX") state.roster.push(createFrog(10));
+      else if (action === "spawnGrail") {
+        const grail = createFrog(10, null, {
+          codominants: [2, 0, 0, 0],
+          recessives: [0, 0, 0, 2, 2, 0],
+          isGrail: true,
+          name: "🌟 Supernova Solar-Archon"
+        });
+        state.roster.push(grail);
+        triggerGrailDiscoveryModal(grail);
+      }
+      else if (action === "maxIVs") {
+        state.roster.forEach(f => {
+          f.ivs = { potency: 100, agility: 100, armor: 100, vitality: 100, shock: 100 };
+          f.valuation = calculateValuation(f);
+        });
+      }
+      else if (action === "winBattle") {
+        if (battleActive) {
+          battleData.enemyHP = 0;
+          resolveDuelOutcome();
+        }
+      }
+      else if (action === "godMode") {
+        state.godMode = !state.godMode;
+        showToast(`God Mode Invincibility: ${state.godMode ? "ON" : "OFF"}`);
+      }
+      else if (action === "day1") advanceDay();
+      else if (action === "day7") {
+        for (let i = 0; i < 7; i++) advanceDay();
+      }
+      else if (action === "reset") {
+        localStorage.removeItem(STORAGE_KEY);
+        seedInitialState();
+        showToast("Vivarium state reset to factory default.");
+      }
+
+      saveState();
+      updateTopLedger();
+      renderVault();
+      renderClutches();
+    }
+
+    function openBackupModal() {
+      sound.playClick();
+      const area = document.getElementById("backup-textarea");
+      area.value = JSON.stringify(state, null, 2);
+      document.getElementById("backup-modal").classList.add("open");
+    }
+
+    function closeBackupModal() {
+      document.getElementById("backup-modal").classList.remove("open");
+    }
+
+    function copySaveToClipboard() {
+      const area = document.getElementById("backup-textarea");
+      area.select();
+      area.setSelectionRange(0, 99999);
+      try {
+        document.execCommand("copy");
+        showToast("📋 Save JSON copied to clipboard!");
+      } catch (e) {
+        showToast("Error copying, please select all and copy manually.");
+      }
+    }
+
+    function restoreSaveFromTextarea() {
+      const area = document.getElementById("backup-textarea");
+      try {
+        const parsed = JSON.parse(area.value);
+        if (parsed && parsed.roster) {
+          state = parsed;
+          saveState();
+          closeBackupModal();
+          updateTopLedger();
+          renderVault();
+          renderClutches();
+          showToast("📥 State successfully restored!");
+        } else {
+          showToast("⚠️ Invalid Save JSON format.");
+        }
+      } catch (e) {
+        showToast("⚠️ Parse error on Save JSON.");
+      }
+    }
+
+    /* World's First Grail Celebration */
+    function triggerGrailDiscoveryModal(frog) {
+      sound.playFanfare();
+      const grailDef = GRAILS.find(g => g.id === frog.grailId) || GRAILS[0];
+      state.credits += 50000;
+      frog.valuation = calculateValuation(frog);
+
+      document.getElementById("grail-modal-desc").innerHTML = `
+        You are the first vivarium in history to breed the <strong style="color:var(--gold-tox);">${grailDef.name}</strong>.<br>
+        Gene Matrix: ${grailDef.desc}
+      `;
+      document.getElementById("grail-name-input").value = frog.name;
+
+      const cvs = document.getElementById("grail-canvas");
+      drawFrogToCanvas(cvs, frog, { scale: 1.3 });
+
+      document.getElementById("grail-modal").classList.add("open");
+      state.currentGrailDiscovering = frog;
+    }
+
+    function confirmGrailDiscovery() {
+      const frog = state.currentGrailDiscovering;
+      if (frog) {
+        const input = document.getElementById("grail-name-input").value.trim();
+        if (input) frog.name = input;
+        state.codex.push({
+          grailId: frog.grailId,
+          name: frog.name,
+          date: `Day ${state.day}`,
+          origin: frog.originTag
+        });
+      }
+      document.getElementById("grail-modal").classList.remove("open");
+      saveState();
+      renderVault();
+      showToast("🌟 Sealed permanently into World's First Codex!");
+    }
+
+    function openCodexModal() {
+      sound.playClick();
+      const list = document.getElementById("codex-list");
+      list.innerHTML = "";
+
+      GRAILS.forEach(g => {
+        const discovery = state.codex.find(c => c.grailId === g.id);
+        const item = document.createElement("div");
+        item.style.background = "#08100c";
+        item.style.border = "1px solid " + (discovery ? "var(--gold-tox)" : "var(--border-subtle)");
+        item.style.padding = "10px";
+        item.style.borderRadius = "8px";
+        item.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="color:${discovery ? 'var(--gold-tox)' : 'var(--text-dim)'};">${discovery ? '🌟 ' + discovery.name : '🔒 Undiscovered Specimen'}</strong>
+            <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">${discovery ? discovery.date : 'UNCLAIMED'}</span>
+          </div>
+          <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">Formula: ${g.desc}</div>
+        `;
+        list.appendChild(item);
+      });
+
+      document.getElementById("codex-modal").classList.add("open");
+    }
+
+    function closeCodexModal() {
+      document.getElementById("codex-modal").classList.remove("open");
+    }
+
+    /* Tab Switcher */
+    function switchTab(tabId) {
+      sound.playClick();
+      document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
+
+      const targetTab = document.getElementById(`tab-${tabId}`);
+      if (targetTab) targetTab.classList.add("active");
+
+      // Highlight active nav button
+      const navButtons = document.querySelectorAll(".nav-tab");
+      const mapping = ["vault", "breeding", "colosseum", "auction", "clearance", "wondertrade", "logistics"];
+      const idx = mapping.indexOf(tabId);
+      if (idx !== -1 && navButtons[idx]) navButtons[idx].classList.add("active");
+
+      if (tabId === "vault") renderVault();
+      else if (tabId === "breeding") updateBreedingSlots();
+      else if (tabId === "colosseum") updateArenaFighterOptions();
+      else if (tabId === "auction") renderAuctionLanes();
+      else if (tabId === "clearance") renderClearanceLots();
+      else if (tabId === "wondertrade") updateWonderTradeSelect();
+    }
+
+    function updateTopLedger() {
+      document.getElementById("display-credits").textContent = `◈${state.credits.toLocaleString()}`;
+      document.getElementById("display-rations").textContent = `${state.rations} 🦗`;
+      document.getElementById("display-poultice").textContent = `${state.poultice} 🧪`;
+      document.getElementById("display-glaze").textContent = `${state.glaze} 🍯`;
+      document.getElementById("display-day").textContent = state.day;
+      document.getElementById("display-vault-count").textContent = `${state.roster.length}/50`;
+      document.getElementById("badge-vault").textContent = state.roster.length;
+    }
+
+    function showToast(msg) {
+      const banner = document.getElementById("toast-banner");
+      banner.textContent = msg;
+      banner.style.display = "block";
+      clearTimeout(banner.timer);
+      banner.timer = setTimeout(() => {
+        banner.style.display = "none";
+      }, 2800);
+    }
+
+    /* Initialize Application on Window Load */
+    window.onload = function() {
+      loadState();
+      updateTopLedger();
+      renderVault();
+      renderAuctionLanes();
+      renderClearanceLots();
+      updateArenaFighterOptions();
+      updateWonderTradeSelect();
+    };
+  </script>
+</body>
+</html>
